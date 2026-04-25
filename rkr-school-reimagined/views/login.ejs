@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+
+<div style="min-height: 80vh; display: flex; align-items: center; background: var(--bg-soft); padding: 60px 0;">
+    <div class="container">
+        <div class="glass-card" style="max-width: 480px; margin: 0 auto; padding: 3.5rem;">
+            
+            <div style="text-align: center; margin-bottom: 2.5rem;">
+                <img src="/images/logo.png" alt="Logo" style="height: 60px; margin: 0 auto 1rem;">
+                <h2 style="font-size: 2.2rem; color: var(--primary);">Welcome Back</h2>
+                <p style="color: var(--text-muted);">Login to access your account</p>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem 1.2rem; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.8rem; font-weight: 600; font-size: 0.9rem;">
+                    <i class="fas fa-exclamation-circle"></i> <%= error %>
+                </div>
+            <% } %>
+
+            <!-- Standard HTML form POST → Express handles redirect -->
+            <form action="/api/auth/login" method="POST">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Email Address</label>
+                    <input type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-yellow" style="width: 100%; text-align: center; font-size: 1rem; padding: 1rem;">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 0.5rem;"></i>Login to Account
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                <p style="color: var(--text-muted); font-size: 0.92rem;">
+                    Don't have an account? 
+                    <a href="/register" style="color: var(--accent); font-weight: 700;">Register here</a>
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.8rem;">
+                    <i class="fas fa-shield-alt" style="color: var(--accent); margin-right: 0.3rem;"></i>
+                    Admin? Use <strong>admin@rkrschool.com</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

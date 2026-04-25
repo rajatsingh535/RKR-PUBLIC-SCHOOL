@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+
+<div style="background: var(--primary); padding: 4rem 0;">
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+            <div>
+                <span class="section-tag" style="color: var(--accent-light);">Administration</span>
+                <h2 style="color: white; font-size: 2.8rem;">Admin Dashboard</h2>
+                <p style="color: rgba(255,255,255,0.6); margin-top: 0.5rem;">Logged in as: <strong style="color: var(--accent-light);"><%= user.name %></strong></p>
+            </div>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem 2.5rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-light);"><%= admissions.length %></div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Total</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem 2.5rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #34d399;"><%= admissions.filter(a => a.status === 'Approved').length %></div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Approved</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem 2.5rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #fbbf24;"><%= admissions.filter(a => a.status === 'Pending').length %></div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Pending</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem 2.5rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #f87171;"><%= admissions.filter(a => a.status === 'Rejected').length %></div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Rejected</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="padding: 60px 0; background: var(--bg-soft);">
+    <div class="container">
+        <% if (admissions.length === 0) { %>
+            <div class="glass-card" style="text-align: center; padding: 5rem 2rem;">
+                <i class="fas fa-inbox" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1.5rem; display: block;"></i>
+                <h3 style="color: var(--text-muted); font-size: 1.5rem; margin-bottom: 1rem;">No Applications Yet</h3>
+                <p style="color: var(--text-muted);">Admission applications will appear here once students submit the form.</p>
+            </div>
+        <% } else { %>
+            <div style="background: white; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden;">
+                <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="color: var(--primary); font-size: 1.2rem;">All Applications</h3>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);"><%= admissions.length %> total record(s)</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Parent</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% admissions.forEach((record, i) => { %>
+                                <tr id="row-<%= record._id %>">
+                                    <td style="color: var(--text-muted); font-size: 0.85rem;"><%= i + 1 %></td>
+                                    <td style="font-weight: 700; color: var(--primary);"><%= record.studentName %></td>
+                                    <td><span style="background:#e0f2fe;color:#0369a1;padding:0.2rem 0.8rem;border-radius:99px;font-size:0.82rem;font-weight:700;">Class <%= record.classApplying %></span></td>
+                                    <td><%= record.parentName %></td>
+                                    <td><a href="tel:<%= record.phone %>" style="color:var(--accent);font-weight:600;"><%= record.phone %></a></td>
+                                    <td style="font-size:0.88rem;"><%= record.email %></td>
+                                    <td style="font-size:0.85rem;color:var(--text-muted);"><%= new Date(record.submittedAt).toLocaleDateString('en-IN') %></td>
+                                    <td>
+                                        <% if (record.status === 'Approved') { %>
+                                            <span class="badge-approved">✓ Approved</span>
+                                        <% } else if (record.status === 'Rejected') { %>
+                                            <span class="badge-rejected">✕ Rejected</span>
+                                        <% } else { %>
+                                            <span class="badge-pending">⏳ Pending</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                            <button onclick="updateStatus('<%= record._id %>', 'Approved')"
+                                                style="background:#d1fae5;color:#065f46;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
+                                                onmouseover="this.style.background='#059669';this.style.color='white'"
+                                                onmouseout="this.style.background='#d1fae5';this.style.color='#065f46'">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            <button onclick="updateStatus('<%= record._id %>', 'Rejected')"
+                                                style="background:#fee2e2;color:#991b1b;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
+                                                onmouseover="this.style.background='#dc2626';this.style.color='white'"
+                                                onmouseout="this.style.background='#fee2e2';this.style.color='#991b1b'">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                            <button onclick="deleteRecord('<%= record._id %>')"
+                                                style="background:#f1f5f9;color:#64748b;border:none;padding:0.45rem 0.8rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
+                                                onmouseover="this.style.background='#ef4444';this.style.color='white'"
+                                                onmouseout="this.style.background='#f1f5f9';this.style.color='#64748b'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

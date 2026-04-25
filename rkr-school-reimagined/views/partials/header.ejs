@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RKR Public School | Shaping Futures</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-content">
+                <div class="contact-info">
+                    <span><i class="fas fa-phone"></i> +91 98765 43210</span>
+                    <span><i class="fas fa-envelope"></i> info@rkrschool.com</span>
+                </div>
+                <div class="top-right">
+                    <span class="affiliation">Affiliated to CBSE, New Delhi</span>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <nav>
+                <div class="brand-container">
+                    <img src="/images/logo.png" alt="Logo" class="header-logo">
+                    <div class="brand-text">
+                        <span class="school-name">R.K.R. Public School</span>
+                        <span class="tagline">Excellence in Education, Values for Life</span>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/" class="active">Home</a></li>
+                    <li class="dropdown">
+                        <a href="/about">About <i class="fas fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/about">Our History</a></li>
+                            <li><a href="/principal">Principal's Message</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="/academics">Academics <i class="fas fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/academics">Curriculum</a></li>
+                            <li><a href="/facilities">Facilities</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="/facilities">Facilities <i class="fas fa-chevron-down"></i></a>
+                    </li>
+                    <li><a href="/gallery">Gallery</a></li>
+                    <li><a href="/news">News</a></li>
+                    <li><a href="/achievements">Achievements</a></li>
+                    
+                    <% if (user) { %>
+                        <li class="dropdown user-nav">
+                            <a href="#"><i class="fas fa-user-circle"></i> <%= user.name %> <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <% if (user.role === 'admin') { %>
+                                    <li><a href="/admin">Admin Dashboard</a></li>
+                                <% } else { %>
+                                    <li><a href="/status">My Application</a></li>
+                                <% } %>
+                                <li><a href="/logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    <% } else { %>
+                        <li><a href="/login" style="font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; padding: 0.75rem 1rem;"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                        <li><a href="/admissions" class="btn-apply"><i class="fas fa-pencil-alt"></i> Apply Now</a></li>
+                    <% } %>
+                </ul>
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="notice-bar">
+        <div class="container">
+            <div class="notice-content">
+                <span class="notice-badge"><i class="fas fa-bullhorn"></i> NOTICES</span>
+                <marquee behavior="scroll" direction="left" onmouseover="this.stop();" onmouseout="this.start();">
+                    • Annual Sports Day on 15th December 2026 • Half-Yearly Examination commences from 5th October 2026 • Parent–Teacher Meeting scheduled for 28th September 2026 • Admissions open for 2026-27 Academic Session
+                </marquee>
+            </div>
+        </div>
+    </div>

@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+
+<div class="form-wrapper">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <span class="section-tag" style="color: var(--accent); font-weight: 800; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 2px;">Mentors</span>
+            <h2 style="font-size: 3.5rem; color: var(--primary);">Our Dedicated Faculty</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 3rem;">
+            <% const faculties = [
+                { name: "Dr. Anjali Sharma", role: "Head of Science", exp: "15+ Years" },
+                { name: "Mr. Ramesh Kumar", role: "Mathematics Dept.", exp: "12+ Years" },
+                { name: "Ms. Priya Singh", role: "English Literature", exp: "10+ Years" },
+                { name: "Mr. Sunil Varma", role: "Social Studies", exp: "8+ Years" },
+                { name: "Ms. Neha Gupta", role: "Primary Coordinator", exp: "14+ Years" },
+                { name: "Mr. Amit Tiwari", role: "Physical Education", exp: "9+ Years" }
+            ]; %>
+            <% faculties.forEach(f => { %>
+                <div class="glass-card" style="text-align: center; padding: 2.5rem;">
+                    <div style="width: 120px; height: 120px; border-radius: 50%; background: var(--primary-light); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--accent-light);">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3 style="color: var(--primary);"><%= f.name %></h3>
+                    <p style="color: var(--accent); font-weight: 600; margin-bottom: 0.5rem;"><%= f.role %></p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Experience: <%= f.exp %></p>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

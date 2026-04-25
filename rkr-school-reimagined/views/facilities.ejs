@@ -1,0 +1,43 @@
+<%- include('partials/header') %>
+
+<div class="form-wrapper">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <span class="section-tag" style="color: var(--accent); font-weight: 800; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 2px;">Campus Life</span>
+            <h2 style="font-size: 3.5rem; color: var(--primary);">World-Class Facilities</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 3rem;">
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <img src="/images/facility-lab.jpg" alt="Lab" style="width: 100%; height: 250px; object-fit: cover;">
+                <div style="padding: 2.5rem;">
+                    <h3 style="color: var(--accent); margin-bottom: 1rem;">Science Laboratories</h3>
+                    <p style="color: var(--text-muted);">Fully equipped Physics, Chemistry, and Biology labs that encourage hands-on learning and scientific inquiry.</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <img src="/images/facility-library.jpg" alt="Library" style="width: 100%; height: 250px; object-fit: cover;">
+                <div style="padding: 2.5rem;">
+                    <h3 style="color: var(--accent); margin-bottom: 1rem;">Resource Library</h3>
+                    <p style="color: var(--text-muted);">A vast collection of books, journals, and digital resources that cater to the diverse interests and research needs of our students.</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <img src="/images/facility-sports.jpg" alt="Sports" style="width: 100%; height: 250px; object-fit: cover;">
+                <div style="padding: 2.5rem;">
+                    <h3 style="color: var(--accent); margin-bottom: 1rem;">Sports Complex</h3>
+                    <p style="color: var(--text-muted);">Extensive grounds for cricket, football, and athletics, along with indoor facilities for basketball, badminton, and table tennis.</p>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <img src="/images/facility-transport.jpg" alt="Transport" style="width: 100%; height: 250px; object-fit: cover;">
+                <div style="padding: 2.5rem;">
+                    <h3 style="color: var(--accent); margin-bottom: 1rem;">Safe Transport</h3>
+                    <p style="color: var(--text-muted);">A fleet of GPS-enabled buses with trained attendants ensuring safe and timely pick-up and drop-off for all students.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

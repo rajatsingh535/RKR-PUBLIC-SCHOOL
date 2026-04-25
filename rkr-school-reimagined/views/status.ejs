@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+
+<div style="background: var(--primary); padding: 4rem 0;">
+    <div class="container">
+        <span class="section-tag" style="color: var(--accent-light);">My Portal</span>
+        <h2 style="color: white; font-size: 2.8rem;">Application Status</h2>
+        <p style="color: rgba(255,255,255,0.6); margin-top: 0.5rem;">Welcome, <strong style="color: var(--accent-light);"><%= user.name %></strong> — track your admission below.</p>
+    </div>
+</div>
+
+<div style="padding: 60px 0; background: var(--bg-soft);">
+    <div class="container">
+        <% if (admissions.length === 0) { %>
+            <div class="glass-card" style="text-align: center; padding: 5rem 2rem; max-width: 600px; margin: 0 auto;">
+                <i class="fas fa-file-alt" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1.5rem; display: block;"></i>
+                <h3 style="color: var(--primary); font-size: 1.8rem; margin-bottom: 1rem;">No Applications Found</h3>
+                <p style="color: var(--text-muted); margin-bottom: 2.5rem;">You have not submitted any admission application yet. Apply now to begin your journey with RKR Public School.</p>
+                <a href="/admissions" class="btn-yellow">Apply for Admission</a>
+            </div>
+        <% } else { %>
+            <% admissions.forEach(record => { %>
+                <div class="glass-card" style="margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <h3 style="color: var(--primary); font-size: 1.6rem; margin-bottom: 0.3rem;"><%= record.studentName %></h3>
+                            <p style="color: var(--text-muted);">Applying for <strong>Class <%= record.classApplying %></strong> · Submitted on <%= new Date(record.submittedAt).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'}) %></p>
+                        </div>
+                        <div>
+                            <% if (record.status === 'Approved') { %>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#d1fae5;color:#065f46;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
+                                    <i class="fas fa-check-circle"></i> Approved
+                                </span>
+                            <% } else if (record.status === 'Rejected') { %>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fee2e2;color:#991b1b;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
+                                    <i class="fas fa-times-circle"></i> Rejected
+                                </span>
+                            <% } else { %>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fef3c7;color:#92400e;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
+                                    <i class="fas fa-clock"></i> Pending Review
+                                </span>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                        <div>
+                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Parent Name</p>
+                            <p style="font-weight:700;color:var(--primary);"><%= record.parentName %></p>
+                        </div>
+                        <div>
+                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Phone</p>
+                            <p style="font-weight:700;color:var(--primary);"><%= record.phone %></p>
+                        </div>
+                        <div>
+                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Email</p>
+                            <p style="font-weight:700;color:var(--primary);"><%= record.email %></p>
+                        </div>
+                        <div>
+                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Date of Birth</p>
+                            <p style="font-weight:700;color:var(--primary);"><%= record.dob || 'N/A' %></p>
+                        </div>
+                    </div>
+
+                    <% if (record.status === 'Pending') { %>
+                        <div style="margin-top: 2rem; padding: 1.2rem 1.5rem; background: #fffbf2; border: 1px solid #e9d8a6; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-info-circle" style="color: var(--accent); font-size: 1.2rem;"></i>
+                            <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">Your application is currently under review. The school will contact you once a decision has been made.</p>
+                        </div>
+                    <% } %>
+                    <% if (record.status === 'Approved') { %>
+                        <div style="margin-top: 2rem; padding: 1.2rem 1.5rem; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-check-circle" style="color: #059669; font-size: 1.2rem;"></i>
+                            <p style="color: #065f46; font-size: 0.92rem; margin: 0; font-weight: 600;">Congratulations! Your application has been approved. Please contact the school for the next steps.</p>
+                        </div>
+                    <% } %>
+                </div>
+            <% }) %>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="/admissions" class="btn-outline">Submit Another Application</a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
