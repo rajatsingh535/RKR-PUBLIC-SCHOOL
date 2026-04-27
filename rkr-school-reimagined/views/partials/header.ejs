@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RKR Public School | Shaping Futures</title>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="shortcut icon" type="image/png" href="/images/logo.png">
     <link rel="stylesheet" href="/css/style.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
@@ -61,7 +63,6 @@
                     <li><a href="/gallery">Gallery</a></li>
                     <li><a href="/news">News</a></li>
                     <li><a href="/achievements">Achievements</a></li>
-                    
                     <% if (user) { %>
                         <li class="dropdown user-nav">
                             <a href="#"><i class="fas fa-user-circle"></i> <%= user.name %> <i class="fas fa-chevron-down"></i></a>
@@ -75,7 +76,7 @@
                             </ul>
                         </li>
                     <% } else { %>
-                        <li><a href="/login" style="font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; padding: 0.75rem 1rem;"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                        <li><a href="/login" class="nav-login-btn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                         <li><a href="/admissions" class="btn-apply"><i class="fas fa-pencil-alt"></i> Apply Now</a></li>
                     <% } %>
                 </ul>
