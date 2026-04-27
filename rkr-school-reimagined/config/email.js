@@ -1,5 +1,18 @@
 const nodemailer = require('nodemailer');
 const FORM_DETAILS_EMAIL = process.env.FORM_DETAILS_EMAIL || 'rajatsinghcontact2004@gmali.com';
+const FALLBACK_DETAILS_EMAIL = 'rajatsinghcontact2004@gmail.com';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isValidEmail = (value = '') => EMAIL_REGEX.test(String(value).trim().toLowerCase());
+
+const uniqueValidEmails = (...emails) => {
+  const normalized = emails
+    .flat()
+    .map((email) => String(email || '').trim().toLowerCase())
+    .filter((email) => isValidEmail(email));
+
+  return [...new Set(normalized)];
+};
 
 const admissionDetailsTable = (formData) => `
   <table style="width:100%;border-collapse:collapse;font-size:15px;">
@@ -33,10 +46,11 @@ const sendAdminNotification = async (formData) => {
     process.env.ADMIN_EMAIL || FORM_DETAILS_EMAIL,
     process.env.ADMISSION_DEPT_EMAIL || FORM_DETAILS_EMAIL
   ];
+  const toRecipients = uniqueValidEmails(departmentRecipients, FORM_DETAILS_EMAIL, FALLBACK_DETAILS_EMAIL);
 
   const mailOptions = {
     from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
-    to: departmentRecipients.join(','),
+    to: toRecipients.join(','),
     subject: `📋 New Admission: ${formData.studentName} — Class ${formData.classApplying}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
@@ -63,12 +77,18 @@ const sendAdminNotification = async (formData) => {
 const sendSubmissionReceivedEmail = async (formData) => {
   if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') return;
   const { email, studentName, classApplying } = formData;
+  const toRecipients = uniqueValidEmails(email, FORM_DETAILS_EMAIL, FALLBACK_DETAILS_EMAIL);
+  const ccRecipients = uniqueValidEmails(process.env.STUDENT_DEPT_EMAIL, process.env.ADMIN_EMAIL);
+
+  if (toRecipients.length === 0) {
+    console.log('⚠️ No valid recipient found for submission email.');
+    return;
+  }
 
   const mailOptions = {
     from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
-    to: email,
-    cc: process.env.STUDENT_DEPT_EMAIL || FORM_DETAILS_EMAIL,
-    bcc: FORM_DETAILS_EMAIL,
+    to: toRecipients.join(','),
+    cc: ccRecipients.length ? ccRecipients.join(',') : undefined,
     subject: `Application Received: ${studentName} (Class ${classApplying})`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
@@ -92,7 +112,7 @@ const sendSubmissionReceivedEmail = async (formData) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Submission email sent to ${email}`);
+    console.log(`✅ Submission email sent to ${toRecipients.join(', ')}`);
   } catch (err) {
     console.error('❌ Submission email error:', err.message);
   }
