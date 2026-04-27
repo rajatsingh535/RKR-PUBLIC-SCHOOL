@@ -1,4 +1,18 @@
 const nodemailer = require('nodemailer');
+const FORM_DETAILS_EMAIL = process.env.FORM_DETAILS_EMAIL || 'rajatsinghcontact2004@gmali.com';
+
+const admissionDetailsTable = (formData) => `
+  <table style="width:100%;border-collapse:collapse;font-size:15px;">
+    <tr><td style="padding:10px;font-weight:bold;color:#555;width:40%;">Student Name</td><td style="padding:10px;">${formData.studentName}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Class</td><td style="padding:10px;">${formData.classApplying}</td></tr>
+    <tr><td style="padding:10px;font-weight:bold;color:#555;">DOB</td><td style="padding:10px;">${formData.dob || '-'}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Gender</td><td style="padding:10px;">${formData.gender || '-'}</td></tr>
+    <tr><td style="padding:10px;font-weight:bold;color:#555;">Parent</td><td style="padding:10px;">${formData.parentName || '-'}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Phone</td><td style="padding:10px;">${formData.phone || '-'}</td></tr>
+    <tr><td style="padding:10px;font-weight:bold;color:#555;">Email</td><td style="padding:10px;">${formData.email || '-'}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Address</td><td style="padding:10px;">${formData.address || '-'}</td></tr>
+  </table>
+`;
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -16,8 +30,8 @@ const sendAdminNotification = async (formData) => {
   }
 
   const departmentRecipients = [
-    process.env.ADMIN_EMAIL || 'rajatsinghcontact2004@gmaill.com',
-    process.env.ADMISSION_DEPT_EMAIL || 'rajatsinghcontact2004@gmaill.com'
+    process.env.ADMIN_EMAIL || FORM_DETAILS_EMAIL,
+    process.env.ADMISSION_DEPT_EMAIL || FORM_DETAILS_EMAIL
   ];
 
   const mailOptions = {
@@ -31,16 +45,7 @@ const sendAdminNotification = async (formData) => {
           <p style="margin:6px 0 0;opacity:0.7;">RKR Public School — Admissions 2026-27</p>
         </div>
         <div style="padding:32px;">
-          <table style="width:100%;border-collapse:collapse;font-size:15px;">
-            <tr><td style="padding:10px;font-weight:bold;color:#555;width:40%;">Student Name</td><td style="padding:10px;">${formData.studentName}</td></tr>
-            <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Class</td><td style="padding:10px;">${formData.classApplying}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;color:#555;">DOB</td><td style="padding:10px;">${formData.dob}</td></tr>
-            <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Gender</td><td style="padding:10px;">${formData.gender}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;color:#555;">Parent</td><td style="padding:10px;">${formData.parentName}</td></tr>
-            <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Phone</td><td style="padding:10px;">${formData.phone}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;color:#555;">Email</td><td style="padding:10px;">${formData.email}</td></tr>
-            <tr style="background:#f8fafc;"><td style="padding:10px;font-weight:bold;color:#555;">Address</td><td style="padding:10px;">${formData.address}</td></tr>
-          </table>
+          ${admissionDetailsTable(formData)}
         </div>
       </div>
     `
@@ -55,13 +60,15 @@ const sendAdminNotification = async (formData) => {
 };
 
 // Send acknowledgement to student/parent when form is submitted
-const sendSubmissionReceivedEmail = async (userEmail, studentName, classApplying) => {
+const sendSubmissionReceivedEmail = async (formData) => {
   if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') return;
+  const { email, studentName, classApplying } = formData;
 
   const mailOptions = {
     from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
-    to: userEmail,
-    cc: process.env.STUDENT_DEPT_EMAIL || 'rajatsinghcontact2004@gmaill.com',
+    to: email,
+    cc: process.env.STUDENT_DEPT_EMAIL || FORM_DETAILS_EMAIL,
+    bcc: FORM_DETAILS_EMAIL,
     subject: `Application Received: ${studentName} (Class ${classApplying})`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
@@ -72,6 +79,10 @@ const sendSubmissionReceivedEmail = async (userEmail, studentName, classApplying
           <p>Dear Parent/Guardian,</p>
           <p>We have received the admission application for <strong>${studentName}</strong> (Class <strong>${classApplying}</strong>).</p>
           <p>Our admissions team will review the form and contact you soon.</p>
+          <div style="margin-top:20px;">
+            <p style="margin-bottom:8px;font-weight:bold;">Submitted details:</p>
+            ${admissionDetailsTable(formData)}
+          </div>
           <br>
           <p>Regards,<br><strong>RKR Public School Admissions Team</strong></p>
         </div>
@@ -81,7 +92,7 @@ const sendSubmissionReceivedEmail = async (userEmail, studentName, classApplying
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Submission email sent to ${userEmail}`);
+    console.log(`✅ Submission email sent to ${email}`);
   } catch (err) {
     console.error('❌ Submission email error:', err.message);
   }

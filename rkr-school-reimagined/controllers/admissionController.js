@@ -1,14 +1,34 @@
 const Admission = require('../models/Admission');
 const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail } = require('../config/email');
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizePhone = (value = '') => value.replace(/\D/g, '');
 
 // ─── SUBMIT FORM (POST /api/admission/submit) — Public ─────────────────────────
 const submitForm = async (req, res) => {
   try {
     const { studentName, dob, gender, classApplying, parentName, email, phone, address, occupation } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedPhone = normalizePhone(String(phone || '').trim());
 
     // Validation
     if (!studentName || !dob || !gender || !classApplying || !parentName || !email || !phone || !address) {
       return res.status(400).json({ message: 'Please fill all required fields.' });
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+
+    if (normalizedPhone.length < 10) {
+      return res.status(400).json({ message: 'Please enter a valid phone number.' });
+    }
+
+    const existingByPhone = await Admission.findOne({
+      $or: [{ phone: phone.trim() }, { phone: normalizedPhone }]
+    });
+    if (existingByPhone) {
+      return res.status(409).json({ message: 'Application already exists for this phone number.' });
     }
 
     const admission = new Admission({
@@ -17,8 +37,8 @@ const submitForm = async (req, res) => {
       gender,
       classApplying,
       parentName: parentName.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.trim(),
+      email: normalizedEmail,
+      phone: normalizedPhone,
       address: address.trim(),
       occupation: occupation || '',
       status: 'Pending',
@@ -29,7 +49,7 @@ const submitForm = async (req, res) => {
 
     // Send email to admin/department and acknowledgement to applicant
     await sendAdminNotification(admission);
-    await sendSubmissionReceivedEmail(admission.email, admission.studentName, admission.classApplying);
+    await sendSubmissionReceivedEmail(admission);
 
     res.json({
       message: '✅ Application submitted successfully! We will contact you shortly.',
