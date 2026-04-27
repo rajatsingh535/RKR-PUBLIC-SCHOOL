@@ -18,9 +18,29 @@ const protect = (req, res, next) => {
 
 // Admin-only middleware
 const adminOnly = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
+  let user = req.user;
+
+  // API routes often don't pass through protect middleware, so decode from cookie.
+  if (!user) {
+    const token = req.cookies.token;
+    if (token) {
+      try {
+        user = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = user;
+      } catch (err) {
+        // invalid token handled by auth check below
+      }
+    }
+  }
+
+  if (!user || user.role !== 'admin') {
+    const isApiRequest = req.originalUrl.startsWith('/api/');
+    if (isApiRequest) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     return res.redirect('/login');
   }
+
   next();
 };
 

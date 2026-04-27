@@ -161,3 +161,7 @@ const deleteRecord = async (id) => {
         showToast('Error deleting record', 'danger');
     }
 };
+
+// Expose admin actions for inline onclick handlers in EJS templates
+window.updateStatus = updateStatus;
+window.deleteRecord = deleteRecord;

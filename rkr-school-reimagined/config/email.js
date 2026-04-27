@@ -15,9 +15,14 @@ const sendAdminNotification = async (formData) => {
     return;
   }
 
+  const departmentRecipients = [
+    process.env.ADMIN_EMAIL || 'rajatsinghcontact2004@gmaill.com',
+    process.env.ADMISSION_DEPT_EMAIL || 'rajatsinghcontact2004@gmaill.com'
+  ];
+
   const mailOptions = {
     from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
-    to: process.env.ADMIN_EMAIL || 'rajatsinghcontact@gmail.com',
+    to: departmentRecipients.join(','),
     subject: `📋 New Admission: ${formData.studentName} — Class ${formData.classApplying}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
@@ -46,6 +51,39 @@ const sendAdminNotification = async (formData) => {
     console.log('✅ Admin notification email sent');
   } catch (err) {
     console.error('❌ Email error:', err.message);
+  }
+};
+
+// Send acknowledgement to student/parent when form is submitted
+const sendSubmissionReceivedEmail = async (userEmail, studentName, classApplying) => {
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') return;
+
+  const mailOptions = {
+    from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    cc: process.env.STUDENT_DEPT_EMAIL || 'rajatsinghcontact2004@gmaill.com',
+    subject: `Application Received: ${studentName} (Class ${classApplying})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+        <div style="background:#0a192f;color:white;padding:24px 32px;">
+          <h2 style="margin:0;">Application Submitted Successfully</h2>
+        </div>
+        <div style="padding:32px;">
+          <p>Dear Parent/Guardian,</p>
+          <p>We have received the admission application for <strong>${studentName}</strong> (Class <strong>${classApplying}</strong>).</p>
+          <p>Our admissions team will review the form and contact you soon.</p>
+          <br>
+          <p>Regards,<br><strong>RKR Public School Admissions Team</strong></p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Submission email sent to ${userEmail}`);
+  } catch (err) {
+    console.error('❌ Submission email error:', err.message);
   }
 };
 
@@ -85,4 +123,4 @@ const sendStatusEmail = async (userEmail, studentName, status) => {
   }
 };
 
-module.exports = { sendAdminNotification, sendStatusEmail };
+module.exports = { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail };

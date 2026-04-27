@@ -1,5 +1,5 @@
 const Admission = require('../models/Admission');
-const { sendAdminNotification, sendStatusEmail } = require('../config/email');
+const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail } = require('../config/email');
 
 // ─── SUBMIT FORM (POST /api/admission/submit) — Public ─────────────────────────
 const submitForm = async (req, res) => {
@@ -27,8 +27,9 @@ const submitForm = async (req, res) => {
 
     await admission.save();
 
-    // Send email to admin
+    // Send email to admin/department and acknowledgement to applicant
     await sendAdminNotification(admission);
+    await sendSubmissionReceivedEmail(admission.email, admission.studentName, admission.classApplying);
 
     res.json({
       message: '✅ Application submitted successfully! We will contact you shortly.',
