@@ -30,15 +30,14 @@ const admissionDetailsTable = (formData) => `
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || process.env.EMAIL,
+    user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
 });
 
 // Send email to admin when new form is submitted
 const sendAdminNotification = async (formData) => {
-  const senderEmail = process.env.EMAIL_USER || process.env.EMAIL;
-  if (!senderEmail || senderEmail === 'your-email@gmail.com') {
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') {
     console.log('⚠️  Email not configured. Skipping notification.');
     return;
   }
@@ -50,7 +49,7 @@ const sendAdminNotification = async (formData) => {
   const toRecipients = uniqueValidEmails(departmentRecipients, FORM_DETAILS_EMAIL, FALLBACK_DETAILS_EMAIL);
 
   const mailOptions = {
-    from: `"RKR Public School" <${senderEmail}>`,
+    from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
     to: toRecipients.join(','),
     subject: `📋 New Admission: ${formData.studentName} — Class ${formData.classApplying}`,
     html: `
@@ -76,8 +75,7 @@ const sendAdminNotification = async (formData) => {
 
 // Send acknowledgement to student/parent when form is submitted
 const sendSubmissionReceivedEmail = async (formData) => {
-  const senderEmail = process.env.EMAIL_USER || process.env.EMAIL;
-  if (!senderEmail || senderEmail === 'your-email@gmail.com') return;
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') return;
   const { email, studentName, classApplying } = formData;
   const toRecipients = uniqueValidEmails(email);
   const ccRecipients = uniqueValidEmails();
@@ -122,8 +120,7 @@ const sendSubmissionReceivedEmail = async (formData) => {
 
 // Send email to user when form status changes
 const sendStatusEmail = async (userEmail, studentName, status) => {
-  const senderEmail = process.env.EMAIL_USER || process.env.EMAIL;
-  if (!senderEmail || senderEmail === 'your-email@gmail.com') return;
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') return;
 
   const isApproved = status === 'Approved';
   const mailOptions = {
@@ -159,14 +156,13 @@ const sendStatusEmail = async (userEmail, studentName, status) => {
 
 // Send OTP email to user for email verification
 const sendOTPEmail = async (userEmail, otp) => {
-  const senderEmail = process.env.EMAIL_USER || process.env.EMAIL;
-  if (!senderEmail || senderEmail === 'your-email@gmail.com') {
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') {
     console.log(`⚠️ Email not configured. Skipping OTP email. OTP is: ${otp}`);
     return;
   }
 
   const mailOptions = {
-    from: `"RKR Public School" <${senderEmail}>`,
+    from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
     to: userEmail,
     subject: `Your Admission OTP - RKR Public School`,
     html: `

@@ -36,13 +36,7 @@ const sendOTP = async (req, res) => {
     res.json({ message: 'OTP sent successfully. Please check your email.' });
   } catch (err) {
     console.error('Send OTP error:', err);
-    let errorMsg = err.message;
-    if (errorMsg.includes('Failed to send OTP email')) {
-      errorMsg += ' (Please verify EMAIL and EMAIL_PASS in Vercel settings. Use a 16-character App Password, not your normal password).';
-    } else if (errorMsg.includes('connect') || errorMsg.includes('Mongoose') || errorMsg.includes('timeout')) {
-      errorMsg += ' (MongoDB connection failed. Please ensure 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access).';
-    }
-    res.status(500).json({ message: 'Server error: ' + errorMsg });
+    res.status(500).json({ message: 'Server error: ' + err.message });
   }
 };
 
