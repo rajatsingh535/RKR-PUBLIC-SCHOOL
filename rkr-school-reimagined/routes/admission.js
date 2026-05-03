@@ -7,10 +7,14 @@ const {
   approveForm,
   rejectForm,
   updateForm,
-  deleteForm
+  deleteForm,
+  uploadDocument,
+  payFees,
+  updateFeesAmount,
+  addResult
 } = require('../controllers/admissionController');
 
-const { optionalAuth, adminOnly } = require('../middleware/auth');
+const { optionalAuth, adminOnly, protect } = require('../middleware/auth');
 
 // POST /api/admission/send-otp — Public
 router.post('/send-otp', sendOTP);
@@ -32,6 +36,18 @@ router.put('/update/:id', adminOnly, updateForm);
 
 // DELETE /api/admission/delete/:id — Admin only
 router.delete('/delete/:id', adminOnly, deleteForm);
+
+// POST /api/admission/upload/:id — Protect
+router.post('/upload/:id', protect, uploadDocument);
+
+// POST /api/admission/pay-fees/:id — Protect
+router.post('/pay-fees/:id', protect, payFees);
+
+// PUT /api/admission/fees/:id — Admin only
+router.put('/fees/:id', adminOnly, updateFeesAmount);
+
+// POST /api/admission/results/:id — Admin only
+router.post('/results/:id', adminOnly, addResult);
 
 // Legacy routes for compatibility with current frontend JS
 router.post('/update-status', adminOnly, async (req, res) => {

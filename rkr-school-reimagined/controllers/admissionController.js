@@ -183,4 +183,92 @@ const deleteForm = async (req, res) => {
   }
 };
 
-module.exports = { sendOTP, submitForm, getAllForms, approveForm, rejectForm, updateForm, deleteForm };
+// ─── UPLOAD DOCUMENT (POST /api/admission/upload/:id) — Protect ──────────────
+const uploadDocument = async (req, res) => {
+  try {
+    const { name, fileType, data } = req.body;
+    if (!name || !data) return res.status(400).json({ message: 'Missing document data' });
+
+    const admission = await Admission.findById(req.params.id);
+    if (!admission) return res.status(404).json({ message: 'Admission not found' });
+    
+    // Authorization check
+    if (req.user && req.user.role !== 'admin' && String(admission.userId) !== String(req.user.id)) {
+      return res.status(403).json({ message: 'Unauthorized access to this application' });
+    }
+
+    admission.documents.push({ name, fileType, data });
+    await admission.save();
+
+    res.json({ message: 'Document uploaded successfully', admission });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
+// ─── PAY FEES (POST /api/admission/pay-fees/:id) — Protect ───────────────────
+const payFees = async (req, res) => {
+  try {
+    const admission = await Admission.findById(req.params.id);
+    if (!admission) return res.status(404).json({ message: 'Admission not found' });
+
+    // Authorization check
+    if (req.user && req.user.role !== 'admin' && String(admission.userId) !== String(req.user.id)) {
+      return res.status(403).json({ message: 'Unauthorized access to this application' });
+    }
+
+    admission.feesPaid = true;
+    await admission.save();
+
+    res.json({ message: 'Fees paid successfully', admission });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
+// ─── UPDATE FEES AMOUNT (PUT /api/admission/fees/:id) — Admin only ───────────
+const updateFeesAmount = async (req, res) => {
+  try {
+    const { feesAmount } = req.body;
+    const admission = await Admission.findByIdAndUpdate(
+      req.params.id,
+      { feesAmount: Number(feesAmount) || 0 },
+      { new: true }
+    );
+    if (!admission) return res.status(404).json({ message: 'Admission not found' });
+
+    res.json({ message: 'Fees amount updated successfully', admission });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
+// ─── ADD RESULT (POST /api/admission/results/:id) — Admin only ───────────────
+const addResult = async (req, res) => {
+  try {
+    const { subject, marks, grade } = req.body;
+    const admission = await Admission.findById(req.params.id);
+    if (!admission) return res.status(404).json({ message: 'Admission not found' });
+
+    admission.results.push({ subject, marks, grade });
+    await admission.save();
+
+    res.json({ message: 'Result added successfully', admission });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
+module.exports = { 
+  sendOTP, 
+  submitForm, 
+  getAllForms, 
+  approveForm, 
+  rejectForm, 
+  updateForm, 
+  deleteForm,
+  uploadDocument,
+  payFees,
+  updateFeesAmount,
+  addResult
+};

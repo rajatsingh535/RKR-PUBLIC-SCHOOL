@@ -12,6 +12,10 @@ const admissionSchema = new mongoose.Schema({
   occupation:    { type: String, default: '' },
   status:        { type: String, default: 'Pending', enum: ['Pending', 'Approved', 'Rejected'] },
   userId:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  documents:     [{ name: String, fileType: String, data: String, uploadedAt: { type: Date, default: Date.now } }],
+  feesPaid:      { type: Boolean, default: false },
+  feesAmount:    { type: Number, default: 0 },
+  results:       [{ subject: String, marks: String, grade: String, addedAt: { type: Date, default: Date.now } }],
   submittedAt:   { type: Date, default: Date.now }
 });
 

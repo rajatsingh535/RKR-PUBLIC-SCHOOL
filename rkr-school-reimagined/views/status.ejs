@@ -1,16 +1,50 @@
 <%- include('partials/header') %>
 
+<style>
+    .dashboard-tabs {
+        display: flex; gap: 1rem; margin-top: 2rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; overflow-x: auto;
+    }
+    .dashboard-tab {
+        padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.3s;
+    }
+    .dashboard-tab.active {
+        color: var(--primary); border-bottom-color: var(--primary);
+    }
+    .tab-content {
+        display: none; padding-top: 1.5rem;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .doc-list {
+        list-style: none; padding: 0; margin: 1rem 0;
+    }
+    .doc-list li {
+        display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-soft); border-radius: 8px; margin-bottom: 0.5rem;
+    }
+    .btn-small {
+        padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 6px; cursor: pointer; border: none; font-weight: 600;
+    }
+    .btn-small-primary { background: var(--primary); color: white; }
+    .btn-small-accent { background: var(--accent); color: white; }
+    
+    .loader {
+        border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
 <div style="background: var(--primary); padding: 4rem 0;">
     <div class="container">
         <span class="section-tag" style="color: var(--accent-light);">My Portal</span>
-        <h2 style="color: white; font-size: 2.8rem;">Application Status</h2>
-        <p style="color: rgba(255,255,255,0.6); margin-top: 0.5rem;">Welcome, <strong style="color: var(--accent-light);"><%= user.name %></strong> — track your admission below.</p>
+        <h2 style="color: white; font-size: 2.8rem;">Student Dashboard</h2>
+        <p style="color: rgba(255,255,255,0.6); margin-top: 0.5rem;">Welcome, <strong style="color: var(--accent-light);"><%= user.name %></strong> — manage your admission below.</p>
     </div>
 </div>
 
-<div style="padding: 60px 0; background: var(--bg-soft);">
+<div style="padding: 60px 0; background: var(--bg-soft); min-height: 50vh;">
     <div class="container">
-        <% if (admissions.length === 0) { %>
+        <% if (!admissions || admissions.length === 0) { %>
             <div class="glass-card" style="text-align: center; padding: 5rem 2rem; max-width: 600px; margin: 0 auto;">
                 <i class="fas fa-file-alt" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1.5rem; display: block;"></i>
                 <h3 style="color: var(--primary); font-size: 1.8rem; margin-bottom: 1rem;">No Applications Found</h3>
@@ -18,69 +52,235 @@
                 <a href="/admissions" class="btn-yellow">Apply for Admission</a>
             </div>
         <% } else { %>
-            <% admissions.forEach(record => { %>
-                <div class="glass-card" style="margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto; margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);">
+            <% admissions.forEach((record, index) => { %>
+                <div class="glass-card" style="margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem;">
                         <div>
                             <h3 style="color: var(--primary); font-size: 1.6rem; margin-bottom: 0.3rem;"><%= record.studentName %></h3>
-                            <p style="color: var(--text-muted);">Applying for <strong>Class <%= record.classApplying %></strong> · Submitted on <%= new Date(record.submittedAt).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'}) %></p>
+                            <p style="color: var(--text-muted);">Applying for <strong>Class <%= record.classApplying %></strong> · Ref: <%= record._id.toString().substring(18,24).toUpperCase() %></p>
                         </div>
                         <div>
                             <% if (record.status === 'Approved') { %>
-                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#d1fae5;color:#065f46;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
-                                    <i class="fas fa-check-circle"></i> Approved
-                                </span>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#d1fae5;color:#065f46;padding:0.6rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.9rem;"><i class="fas fa-check-circle"></i> Approved</span>
                             <% } else if (record.status === 'Rejected') { %>
-                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fee2e2;color:#991b1b;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
-                                    <i class="fas fa-times-circle"></i> Rejected
-                                </span>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fee2e2;color:#991b1b;padding:0.6rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.9rem;"><i class="fas fa-times-circle"></i> Rejected</span>
                             <% } else { %>
-                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fef3c7;color:#92400e;padding:0.8rem 2rem;border-radius:8px;font-weight:800;font-size:1rem;">
-                                    <i class="fas fa-clock"></i> Pending Review
-                                </span>
+                                <span style="display:inline-flex;align-items:center;gap:0.6rem;background:#fef3c7;color:#92400e;padding:0.6rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.9rem;"><i class="fas fa-clock"></i> Pending Review</span>
                             <% } %>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-                        <div>
-                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Parent Name</p>
-                            <p style="font-weight:700;color:var(--primary);"><%= record.parentName %></p>
+                    <!-- Dashboard Tabs -->
+                    <div class="dashboard-tabs">
+                        <div class="dashboard-tab active" onclick="switchTab(this, 'tab-status-<%= index %>')">Status</div>
+                        <div class="dashboard-tab" onclick="switchTab(this, 'tab-docs-<%= index %>')">Documents</div>
+                        <div class="dashboard-tab" onclick="switchTab(this, 'tab-fees-<%= index %>')">Fees Payment</div>
+                        <div class="dashboard-tab" onclick="switchTab(this, 'tab-results-<%= index %>')">Results</div>
+                    </div>
+
+                    <!-- TAB: Status -->
+                    <div id="tab-status-<%= index %>" class="tab-content active">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Parent Name</p><p style="font-weight:700;color:var(--primary);"><%= record.parentName %></p></div>
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Phone</p><p style="font-weight:700;color:var(--primary);"><%= record.phone %></p></div>
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Email</p><p style="font-weight:700;color:var(--primary);"><%= record.email %></p></div>
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Date of Birth</p><p style="font-weight:700;color:var(--primary);"><%= record.dob %></p></div>
                         </div>
-                        <div>
-                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Phone</p>
-                            <p style="font-weight:700;color:var(--primary);"><%= record.phone %></p>
-                        </div>
-                        <div>
-                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Email</p>
-                            <p style="font-weight:700;color:var(--primary);"><%= record.email %></p>
-                        </div>
-                        <div>
-                            <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.3rem;">Date of Birth</p>
-                            <p style="font-weight:700;color:var(--primary);"><%= record.dob || 'N/A' %></p>
+                        <% if (record.status === 'Pending') { %>
+                            <div style="padding: 1.2rem 1.5rem; background: #fffbf2; border: 1px solid #e9d8a6; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                                <i class="fas fa-info-circle" style="color: var(--accent);"></i>
+                                <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">Your application is under review. Please upload required documents in the Documents tab.</p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- TAB: Documents -->
+                    <div id="tab-docs-<%= index %>" class="tab-content">
+                        <h4>Uploaded Documents</h4>
+                        <% if (!record.documents || record.documents.length === 0) { %>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">No documents uploaded yet.</p>
+                        <% } else { %>
+                            <ul class="doc-list">
+                                <% record.documents.forEach(doc => { %>
+                                    <li>
+                                        <div>
+                                            <i class="fas fa-file-image" style="color: var(--primary); margin-right: 8px;"></i>
+                                            <strong><%= doc.name %></strong>
+                                        </div>
+                                        <a href="<%= doc.data %>" download="<%= doc.name %>" class="btn-small btn-small-accent">View/Download</a>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } %>
+                        
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border);">
+                            <h4 style="margin-bottom: 1rem;">Upload New Document</h4>
+                            <form onsubmit="handleUpload(event, '<%= record._id %>')" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="docName_<%= record._id %>" placeholder="Document Name (e.g. Aadhar)" required style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                <input type="file" id="docFile_<%= record._id %>" accept="image/*,.pdf" required style="font-size: 0.9rem;">
+                                <button type="submit" class="btn-small btn-small-primary" id="btnUpload_<%= record._id %>">Upload</button>
+                            </form>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Note: Max file size 2MB. Image or PDF preferred.</p>
                         </div>
                     </div>
 
-                    <% if (record.status === 'Pending') { %>
-                        <div style="margin-top: 2rem; padding: 1.2rem 1.5rem; background: #fffbf2; border: 1px solid #e9d8a6; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
-                            <i class="fas fa-info-circle" style="color: var(--accent); font-size: 1.2rem;"></i>
-                            <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">Your application is currently under review. The school will contact you once a decision has been made.</p>
-                        </div>
-                    <% } %>
-                    <% if (record.status === 'Approved') { %>
-                        <div style="margin-top: 2rem; padding: 1.2rem 1.5rem; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
-                            <i class="fas fa-check-circle" style="color: #059669; font-size: 1.2rem;"></i>
-                            <p style="color: #065f46; font-size: 0.92rem; margin: 0; font-weight: 600;">Congratulations! Your application has been approved. Please contact the school for the next steps.</p>
-                        </div>
-                    <% } %>
+                    <!-- TAB: Fees -->
+                    <div id="tab-fees-<%= index %>" class="tab-content">
+                        <% if (record.status !== 'Approved') { %>
+                            <div style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-lock" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                                <p style="color: var(--text-muted);">Fee payment will be unlocked once your application is Approved.</p>
+                            </div>
+                        <% } else { %>
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center;">
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Admission Fees</h4>
+                                <h2 style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem;">₹<%= record.feesAmount || 0 %></h2>
+                                
+                                <% if (record.feesPaid) { %>
+                                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #d1fae5; color: #065f46; padding: 0.8rem 2rem; border-radius: 8px; font-weight: 700;">
+                                        <i class="fas fa-check-circle"></i> Payment Successful
+                                    </div>
+                                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">Receipt generated automatically.</p>
+                                <% } else { %>
+                                    <% if (record.feesAmount > 0) { %>
+                                        <button onclick="payFees('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="padding: 0.8rem 2.5rem;">Pay Now (Mock)</button>
+                                        <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">Clicking this will simulate a successful payment gateway transaction.</p>
+                                    <% } else { %>
+                                        <p style="color: var(--text-muted);">Fee amount not yet generated by administration.</p>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- TAB: Results -->
+                    <div id="tab-results-<%= index %>" class="tab-content">
+                        <% if (!record.results || record.results.length === 0) { %>
+                            <div style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-chart-line" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                                <p style="color: var(--text-muted);">No academic results published yet.</p>
+                            </div>
+                        <% } else { %>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                                <thead>
+                                    <tr style="background: var(--primary); color: white; text-align: left;">
+                                        <th style="padding: 1rem; border-radius: 8px 0 0 0;">Subject/Term</th>
+                                        <th style="padding: 1rem;">Marks</th>
+                                        <th style="padding: 1rem; border-radius: 0 8px 0 0;">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% record.results.forEach(result => { %>
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <td style="padding: 1rem; font-weight: 600;"><%= result.subject %></td>
+                                            <td style="padding: 1rem;"><%= result.marks %></td>
+                                            <td style="padding: 1rem; color: var(--accent); font-weight: bold;"><%= result.grade %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        <% } %>
+                    </div>
                 </div>
             <% }) %>
-
-            <div style="text-align: center; margin-top: 3rem;">
-                <a href="/admissions" class="btn-outline">Submit Another Application</a>
-            </div>
         <% } %>
     </div>
 </div>
+
+<script>
+    function switchTab(element, tabId) {
+        // Find parent tabs container and content container
+        const tabsContainer = element.parentElement;
+        const cardContainer = tabsContainer.parentElement;
+        
+        // Remove active class from tabs
+        tabsContainer.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
+        // Add active class to clicked tab
+        element.classList.add('active');
+        
+        // Hide all contents in this card
+        cardContainer.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        // Show target content
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Handle File Upload (Base64 conversion)
+    async function handleUpload(e, id) {
+        e.preventDefault();
+        const btn = document.getElementById(`btnUpload_${id}`);
+        const nameInput = document.getElementById(`docName_${id}`);
+        const fileInput = document.getElementById(`docFile_${id}`);
+        
+        if (!fileInput.files || fileInput.files.length === 0) return alert('Please select a file');
+        
+        const file = fileInput.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+            return alert('File size must be under 2MB.');
+        }
+
+        btn.innerHTML = '<span class="loader"></span> Uploading...';
+        btn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+            const base64data = reader.result;
+            try {
+                const res = await fetch(`/api/admission/upload/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameInput.value,
+                        fileType: file.type,
+                        data: base64data
+                    })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert('Document uploaded successfully!');
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Upload failed');
+                    btn.innerHTML = 'Upload';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('Error connecting to server.');
+                btn.innerHTML = 'Upload';
+                btn.disabled = false;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Handle Mock Fee Payment
+    async function payFees(id) {
+        const btn = document.getElementById(`btnPay_${id}`);
+        btn.innerHTML = '<span class="loader"></span> Processing...';
+        btn.disabled = true;
+
+        // Simulate 1.5s delay for payment gateway
+        setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/admission/pay-fees/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (res.ok) {
+                    alert('Payment successful!');
+                    window.location.reload();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Payment failed');
+                    btn.innerHTML = 'Pay Now (Mock)';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('Error connecting to server.');
+                btn.innerHTML = 'Pay Now (Mock)';
+                btn.disabled = false;
+            }
+        }, 1500);
+    }
+</script>
 
 <%- include('partials/footer') %>

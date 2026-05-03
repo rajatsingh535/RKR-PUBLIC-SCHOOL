@@ -92,6 +92,12 @@
                                                 onmouseout="this.style.background='#fee2e2';this.style.color='#991b1b'">
                                                 <i class="fas fa-times"></i> Reject
                                             </button>
+                                            <button onclick="document.getElementById('manageModal_<%= record._id %>').showModal()"
+                                                style="background:#f3e8ff;color:#7e22ce;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
+                                                onmouseover="this.style.background='#a855f7';this.style.color='white'"
+                                                onmouseout="this.style.background='#f3e8ff';this.style.color='#7e22ce'">
+                                                <i class="fas fa-cog"></i> Manage
+                                            </button>
                                             <button onclick="deleteRecord('<%= record._id %>')"
                                                 style="background:#f1f5f9;color:#64748b;border:none;padding:0.45rem 0.8rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
                                                 onmouseover="this.style.background='#ef4444';this.style.color='white'"
@@ -99,6 +105,59 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
+
+                                        <!-- MANAGE MODAL -->
+                                        <dialog id="manageModal_<%= record._id %>" style="border:none; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                                <h3 style="color: var(--primary); margin: 0;">Manage: <%= record.studentName %></h3>
+                                                <button onclick="document.getElementById('manageModal_<%= record._id %>').close()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                                            </div>
+                                            
+                                            <!-- Documents Section -->
+                                            <div style="margin-bottom: 2rem;">
+                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Uploaded Documents</h4>
+                                                <% if (!record.documents || record.documents.length === 0) { %>
+                                                    <p style="font-size: 0.9rem; color: var(--text-muted);">No documents uploaded.</p>
+                                                <% } else { %>
+                                                    <ul style="list-style: none; padding: 0;">
+                                                        <% record.documents.forEach(doc => { %>
+                                                            <li style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-soft); margin-bottom: 0.5rem; border-radius: 4px;">
+                                                                <span><%= doc.name %></span>
+                                                                <a href="<%= doc.data %>" target="_blank" style="color: var(--accent); font-weight: bold; font-size: 0.85rem;">View</a>
+                                                            </li>
+                                                        <% }) %>
+                                                    </ul>
+                                                <% } %>
+                                            </div>
+
+                                            <!-- Fees Section -->
+                                            <div style="margin-bottom: 2rem;">
+                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Set Fees</h4>
+                                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                                    <input type="number" id="feeInput_<%= record._id %>" value="<%= record.feesAmount %>" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;" placeholder="Amount (₹)">
+                                                    <button onclick="updateFees('<%= record._id %>')" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Save Fees</button>
+                                                </div>
+                                                <% if (record.feesPaid) { %>
+                                                    <p style="color: #059669; font-weight: bold; font-size: 0.85rem; margin-top: 0.5rem;">Fees Paid ✅</p>
+                                                <% } else { %>
+                                                    <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">Fees Pending ⏳</p>
+                                                <% } %>
+                                            </div>
+
+                                            <!-- Results Section -->
+                                            <div>
+                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Add Result</h4>
+                                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                                                    <input type="text" id="resSub_<%= record._id %>" placeholder="Subject" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; flex: 1;">
+                                                    <input type="text" id="resMarks_<%= record._id %>" placeholder="Marks" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
+                                                    <input type="text" id="resGrade_<%= record._id %>" placeholder="Grade" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
+                                                    <button onclick="addResult('<%= record._id %>')" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Add</button>
+                                                </div>
+                                                <% if (record.results && record.results.length > 0) { %>
+                                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Current Results: <%= record.results.length %> entries</p>
+                                                <% } %>
+                                            </div>
+                                        </dialog>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -109,5 +168,56 @@
         <% } %>
     </div>
 </div>
+
+<script>
+    async function updateFees(id) {
+        const feesAmount = document.getElementById(`feeInput_${id}`).value;
+        if (!feesAmount) return alert('Please enter a fee amount');
+
+        try {
+            const res = await fetch(`/api/admission/fees/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feesAmount })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Fees updated successfully!');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to update fees');
+            }
+        } catch (err) {
+            alert('Error connecting to server.');
+        }
+    }
+
+    async function addResult(id) {
+        const subject = document.getElementById(`resSub_${id}`).value;
+        const marks = document.getElementById(`resMarks_${id}`).value;
+        const grade = document.getElementById(`resGrade_${id}`).value;
+
+        if (!subject || !marks || !grade) {
+            return alert('Please fill all result fields');
+        }
+
+        try {
+            const res = await fetch(`/api/admission/results/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject, marks, grade })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Result added successfully!');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to add result');
+            }
+        } catch (err) {
+            alert('Error connecting to server.');
+        }
+    }
+</script>
 
 <%- include('partials/footer') %>
