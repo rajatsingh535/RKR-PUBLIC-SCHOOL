@@ -634,9 +634,9 @@ marquee {
 /* ============================================================
    ADMIN & STATUS TABLES
    ============================================================ */
-table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
-th { background: var(--primary); color: white; padding: 1rem 1.2rem; text-align: left; font-weight: 700; }
-td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; table-layout: auto; }
+th { background: var(--primary); color: white; padding: 1rem 1.2rem; text-align: left; font-weight: 700; white-space: nowrap; }
+td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
 tr:hover td { background: var(--bg-soft); }
 
 .badge-pending  { background: #fef3c7; color: #92400e; padding: 0.3rem 0.9rem; border-radius: 99px; font-weight: 700; font-size: 0.8rem; }

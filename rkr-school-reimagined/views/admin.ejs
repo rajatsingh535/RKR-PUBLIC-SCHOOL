@@ -62,14 +62,14 @@
                         <tbody>
                             <% admissions.forEach((record, i) => { %>
                                 <tr id="row-<%= record._id %>">
-                                    <td style="color: var(--text-muted); font-size: 0.85rem;"><%= i + 1 %></td>
-                                    <td style="font-weight: 700; color: var(--primary);"><%= record.studentName %></td>
-                                    <td><span style="background:#e0f2fe;color:#0369a1;padding:0.2rem 0.8rem;border-radius:99px;font-size:0.82rem;font-weight:700;">Class <%= record.classApplying %></span></td>
-                                    <td><%= record.parentName %></td>
-                                    <td><a href="tel:<%= record.phone %>" style="color:var(--accent);font-weight:600;"><%= record.phone %></a></td>
-                                    <td style="font-size:0.88rem;"><%= record.email %></td>
-                                    <td style="font-size:0.85rem;color:var(--text-muted);"><%= new Date(record.submittedAt).toLocaleDateString('en-IN') %></td>
-                                    <td>
+                                    <td style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;"><%= i + 1 %></td>
+                                    <td style="font-weight: 700; color: var(--primary); white-space: nowrap;"><%= record.studentName %></td>
+                                    <td style="white-space: nowrap;"><span style="background:#e0f2fe;color:#0369a1;padding:0.2rem 0.8rem;border-radius:99px;font-size:0.82rem;font-weight:700;">Class <%= record.classApplying %></span></td>
+                                    <td style="white-space: nowrap;"><%= record.parentName %></td>
+                                    <td style="white-space: nowrap;"><a href="tel:<%= record.phone %>" style="color:var(--accent);font-weight:600;"><%= record.phone %></a></td>
+                                    <td style="font-size:0.88rem; white-space: nowrap;"><%= record.email %></td>
+                                    <td style="font-size:0.85rem;color:var(--text-muted); white-space: nowrap;"><%= new Date(record.submittedAt).toLocaleDateString('en-IN') %></td>
+                                    <td style="white-space: nowrap;">
                                         <% if (record.status === 'Approved') { %>
                                             <span class="badge-approved">✓ Approved</span>
                                         <% } else if (record.status === 'Rejected') { %>
@@ -78,8 +78,8 @@
                                             <span class="badge-pending">⏳ Pending</span>
                                         <% } %>
                                     </td>
-                                    <td>
-                                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                    <td style="white-space: nowrap;">
+                                        <div style="display:flex;gap:0.5rem;flex-wrap:nowrap;">
                                             <button onclick="updateStatus('<%= record._id %>', 'Approved')"
                                                 style="background:#d1fae5;color:#065f46;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s;"
                                                 onmouseover="this.style.background='#059669';this.style.color='white'"
@@ -105,59 +105,6 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
-
-                                        <!-- MANAGE MODAL -->
-                                        <dialog id="manageModal_<%= record._id %>" style="border:none; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                                                <h3 style="color: var(--primary); margin: 0;">Manage: <%= record.studentName %></h3>
-                                                <button onclick="document.getElementById('manageModal_<%= record._id %>').close()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
-                                            </div>
-                                            
-                                            <!-- Documents Section -->
-                                            <div style="margin-bottom: 2rem;">
-                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Uploaded Documents</h4>
-                                                <% if (!record.documents || record.documents.length === 0) { %>
-                                                    <p style="font-size: 0.9rem; color: var(--text-muted);">No documents uploaded.</p>
-                                                <% } else { %>
-                                                    <ul style="list-style: none; padding: 0;">
-                                                        <% record.documents.forEach(doc => { %>
-                                                            <li style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-soft); margin-bottom: 0.5rem; border-radius: 4px;">
-                                                                <span><%= doc.name %></span>
-                                                                <a href="<%= doc.data %>" target="_blank" style="color: var(--accent); font-weight: bold; font-size: 0.85rem;">View</a>
-                                                            </li>
-                                                        <% }) %>
-                                                    </ul>
-                                                <% } %>
-                                            </div>
-
-                                            <!-- Fees Section -->
-                                            <div style="margin-bottom: 2rem;">
-                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Set Fees</h4>
-                                                <div style="display: flex; gap: 1rem; align-items: center;">
-                                                    <input type="number" id="feeInput_<%= record._id %>" value="<%= record.feesAmount %>" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;" placeholder="Amount (₹)">
-                                                    <button onclick="updateFees('<%= record._id %>')" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Save Fees</button>
-                                                </div>
-                                                <% if (record.feesPaid) { %>
-                                                    <p style="color: #059669; font-weight: bold; font-size: 0.85rem; margin-top: 0.5rem;">Fees Paid ✅</p>
-                                                <% } else { %>
-                                                    <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">Fees Pending ⏳</p>
-                                                <% } %>
-                                            </div>
-
-                                            <!-- Results Section -->
-                                            <div>
-                                                <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Add Result</h4>
-                                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                                                    <input type="text" id="resSub_<%= record._id %>" placeholder="Subject" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; flex: 1;">
-                                                    <input type="text" id="resMarks_<%= record._id %>" placeholder="Marks" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
-                                                    <input type="text" id="resGrade_<%= record._id %>" placeholder="Grade" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
-                                                    <button onclick="addResult('<%= record._id %>')" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Add</button>
-                                                </div>
-                                                <% if (record.results && record.results.length > 0) { %>
-                                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Current Results: <%= record.results.length %> entries</p>
-                                                <% } %>
-                                            </div>
-                                        </dialog>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -165,6 +112,62 @@
                     </table>
                 </div>
             </div>
+
+            <!-- ALL MANAGE MODALS (outside the table) -->
+            <% admissions.forEach(record => { %>
+                <dialog id="manageModal_<%= record._id %>" style="border:none; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--primary); margin: 0;">Manage: <%= record.studentName %></h3>
+                        <button onclick="document.getElementById('manageModal_<%= record._id %>').close()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+                    </div>
+                    
+                    <!-- Documents Section -->
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Uploaded Documents</h4>
+                        <% if (!record.documents || record.documents.length === 0) { %>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">No documents uploaded.</p>
+                        <% } else { %>
+                            <ul style="list-style: none; padding: 0;">
+                                <% record.documents.forEach(doc => { %>
+                                    <li style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-soft); margin-bottom: 0.5rem; border-radius: 4px;">
+                                        <span><%= doc.name %></span>
+                                        <a href="<%= doc.data %>" target="_blank" style="color: var(--accent); font-weight: bold; font-size: 0.85rem;">View</a>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } %>
+                    </div>
+
+                    <!-- Fees Section -->
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Set Fees</h4>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <input type="number" id="feeInput_<%= record._id %>" value="<%= record.feesAmount %>" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;" placeholder="Amount (₹)">
+                            <button onclick="updateFees('<%= record._id %>')" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Save Fees</button>
+                        </div>
+                        <% if (record.feesPaid) { %>
+                            <p style="color: #059669; font-weight: bold; font-size: 0.85rem; margin-top: 0.5rem;">Fees Paid ✅</p>
+                        <% } else { %>
+                            <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">Fees Pending ⏳</p>
+                        <% } %>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Add Result</h4>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <input type="text" id="resSub_<%= record._id %>" placeholder="Subject" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; flex: 1;">
+                            <input type="text" id="resMarks_<%= record._id %>" placeholder="Marks" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
+                            <input type="text" id="resGrade_<%= record._id %>" placeholder="Grade" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; width: 80px;">
+                            <button onclick="addResult('<%= record._id %>')" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Add</button>
+                        </div>
+                        <% if (record.results && record.results.length > 0) { %>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Current Results: <%= record.results.length %> entries</p>
+                        <% } %>
+                    </div>
+                </dialog>
+            <% }) %>
+
         <% } %>
     </div>
 </div>
