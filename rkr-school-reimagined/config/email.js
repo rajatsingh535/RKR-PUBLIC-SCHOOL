@@ -79,8 +79,8 @@ const sendSubmissionReceivedEmail = async (formData) => {
   const senderEmail = process.env.EMAIL_USER || process.env.EMAIL;
   if (!senderEmail || senderEmail === 'your-email@gmail.com') return;
   const { email, studentName, classApplying } = formData;
-  const toRecipients = uniqueValidEmails(email, FORM_DETAILS_EMAIL, FALLBACK_DETAILS_EMAIL);
-  const ccRecipients = uniqueValidEmails(process.env.STUDENT_DEPT_EMAIL, process.env.ADMIN_EMAIL);
+  const toRecipients = uniqueValidEmails(email);
+  const ccRecipients = uniqueValidEmails();
 
   if (toRecipients.length === 0) {
     console.log('⚠️ No valid recipient found for submission email.');
