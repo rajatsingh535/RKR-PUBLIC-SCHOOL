@@ -101,7 +101,7 @@
                             <p style="color: var(--text-muted); font-size: 0.9rem;">No documents uploaded yet.</p>
                         <% } else { %>
                             <ul class="doc-list">
-                                <% record.documents.forEach(doc => { %>
+                                <% (record.documents || []).forEach(doc => { %>
                                     <li>
                                         <div>
                                             <i class="fas fa-file-image" style="color: var(--primary); margin-right: 8px;"></i>
@@ -170,7 +170,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% record.results.forEach(result => { %>
+                                    <% (record.results || []).forEach(result => { %>
                                         <tr style="border-bottom: 1px solid var(--border);">
                                             <td style="padding: 1rem; font-weight: 600;"><%= result.subject %></td>
                                             <td style="padding: 1rem;"><%= result.marks %></td>

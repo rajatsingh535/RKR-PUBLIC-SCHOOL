@@ -128,7 +128,7 @@
                             <p style="font-size: 0.9rem; color: var(--text-muted);">No documents uploaded.</p>
                         <% } else { %>
                             <ul style="list-style: none; padding: 0;">
-                                <% record.documents.forEach(doc => { %>
+                                <% (record.documents || []).forEach(doc => { %>
                                     <li style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-soft); margin-bottom: 0.5rem; border-radius: 4px;">
                                         <span><%= doc.name %></span>
                                         <a href="<%= doc.data %>" target="_blank" style="color: var(--accent); font-weight: bold; font-size: 0.85rem;">View</a>
