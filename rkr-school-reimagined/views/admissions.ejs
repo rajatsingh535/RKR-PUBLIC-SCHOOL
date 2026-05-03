@@ -61,7 +61,14 @@
                     </div>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input type="email" name="email" placeholder="Enter email address" required>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="email" name="email" id="emailInput" placeholder="Enter email address" style="flex: 1;" required>
+                            <button type="button" id="sendOtpBtn" class="btn-yellow" style="padding: 0 1.5rem; white-space: nowrap; height: auto;">Send OTP</button>
+                        </div>
+                    </div>
+                    <div class="form-group" id="otpGroup" style="display: none;">
+                        <label>Enter OTP <span style="color: #10b981; font-size: 0.8em;">(Sent to email)</span></label>
+                        <input type="text" name="otp" id="otpInput" placeholder="Enter 6-digit OTP" pattern="\d{6}">
                     </div>
                     <div class="form-group">
                         <label>Occupation</label>

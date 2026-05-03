@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  sendOTP,
   submitForm,
   getAllForms,
   approveForm,
@@ -10,6 +11,9 @@ const {
 } = require('../controllers/admissionController');
 
 const { optionalAuth, adminOnly } = require('../middleware/auth');
+
+// POST /api/admission/send-otp — Public
+router.post('/send-otp', sendOTP);
 
 // POST /api/admission/submit — Public (optional auth to attach user ID)
 router.post('/submit', optionalAuth, submitForm);

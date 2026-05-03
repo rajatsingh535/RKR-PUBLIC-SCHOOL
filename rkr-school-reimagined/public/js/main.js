@@ -119,8 +119,57 @@ if (loginForm) {
 }
 
 handleForm('registerForm', '/api/auth/register', '/');
-handleForm('admissionForm', '/api/admission/submit', '/');
 
+// OTP Handling for Admission Form
+const sendOtpBtn = document.getElementById('sendOtpBtn');
+const emailInput = document.getElementById('emailInput');
+const otpGroup = document.getElementById('otpGroup');
+const otpInput = document.getElementById('otpInput');
+
+if (sendOtpBtn && emailInput) {
+    sendOtpBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        if (!email) {
+            showToast('Please enter an email address first.', 'danger');
+            return;
+        }
+
+        const originalText = sendOtpBtn.innerText;
+        sendOtpBtn.innerText = 'Sending...';
+        sendOtpBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/admission/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                showToast(result.message);
+                otpGroup.style.display = 'block';
+                otpInput.required = true;
+                sendOtpBtn.innerText = 'OTP Sent';
+                // keep disabled for a while or forever since one OTP is enough
+                setTimeout(() => {
+                    sendOtpBtn.innerText = 'Resend OTP';
+                    sendOtpBtn.disabled = false;
+                }, 30000); // Allow resend after 30 seconds
+            } else {
+                showToast(result.message, 'danger');
+                sendOtpBtn.innerText = originalText;
+                sendOtpBtn.disabled = false;
+            }
+        } catch (err) {
+            showToast('Failed to send OTP. Try again.', 'danger');
+            sendOtpBtn.innerText = originalText;
+            sendOtpBtn.disabled = false;
+        }
+    });
+}
+
+handleForm('admissionForm', '/api/admission/submit', '/');
 // Admin Actions
 const updateStatus = async (id, status) => {
     try {

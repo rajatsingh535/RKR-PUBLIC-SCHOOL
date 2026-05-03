@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const FORM_DETAILS_EMAIL = process.env.FORM_DETAILS_EMAIL || 'rajatsinghcontact2004@gmali.com';
+const FORM_DETAILS_EMAIL = process.env.FORM_DETAILS_EMAIL || 'rajatsinghcontact2004@gmail.com';
 const FALLBACK_DETAILS_EMAIL = 'rajatsinghcontact2004@gmail.com';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -154,4 +154,41 @@ const sendStatusEmail = async (userEmail, studentName, status) => {
   }
 };
 
-module.exports = { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail };
+// Send OTP email to user for email verification
+const sendOTPEmail = async (userEmail, otp) => {
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') {
+    console.log(`⚠️ Email not configured. Skipping OTP email. OTP is: ${otp}`);
+    return;
+  }
+
+  const mailOptions = {
+    from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: `Your Admission OTP - RKR Public School`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+        <div style="background:#0a192f;color:white;padding:24px 32px;">
+          <h2 style="margin:0;">Email Verification</h2>
+        </div>
+        <div style="padding:32px;">
+          <p>Dear Applicant,</p>
+          <p>Your One-Time Password (OTP) for admission application is:</p>
+          <h1 style="color:#059669; letter-spacing: 5px;">${otp}</h1>
+          <p>This OTP is valid for 5 minutes. Please do not share it with anyone.</p>
+          <br>
+          <p>Regards,<br><strong>RKR Public School Admissions Team</strong></p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ OTP email sent to ${userEmail}`);
+  } catch (err) {
+    console.error('❌ OTP email error:', err.message);
+    throw new Error('Failed to send OTP email');
+  }
+};
+
+module.exports = { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail };

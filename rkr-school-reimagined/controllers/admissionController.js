@@ -1,19 +1,55 @@
 const Admission = require('../models/Admission');
-const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail } = require('../config/email');
+const OTP = require('../models/OTP');
+const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail } = require('../config/email');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizePhone = (value = '') => value.replace(/\D/g, '');
 
+// ─── SEND OTP (POST /api/admission/send-otp) — Public ────────────────────────
+const sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+
+    // Check if email already exists
+    const existingAdmission = await Admission.findOne({ email: normalizedEmail });
+    if (existingAdmission) {
+      return res.status(409).json({ message: 'An application has already been submitted with this email.' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Remove any existing OTP for this email
+    await OTP.deleteMany({ email: normalizedEmail });
+
+    // Save new OTP
+    await new OTP({ email: normalizedEmail, otp }).save();
+
+    // Send Email
+    await sendOTPEmail(normalizedEmail, otp);
+
+    res.json({ message: 'OTP sent successfully. Please check your email.' });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
 // ─── SUBMIT FORM (POST /api/admission/submit) — Public ─────────────────────────
 const submitForm = async (req, res) => {
   try {
-    const { studentName, dob, gender, classApplying, parentName, email, phone, address, occupation } = req.body;
+    const { studentName, dob, gender, classApplying, parentName, email, phone, address, occupation, otp } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
     const normalizedPhone = normalizePhone(String(phone || '').trim());
 
     // Validation
-    if (!studentName || !dob || !gender || !classApplying || !parentName || !email || !phone || !address) {
-      return res.status(400).json({ message: 'Please fill all required fields.' });
+    if (!studentName || !dob || !gender || !classApplying || !parentName || !email || !phone || !address || !otp) {
+      return res.status(400).json({ message: 'Please fill all required fields including OTP.' });
     }
 
     if (!EMAIL_REGEX.test(normalizedEmail)) {
@@ -22,6 +58,18 @@ const submitForm = async (req, res) => {
 
     if (normalizedPhone.length < 10) {
       return res.status(400).json({ message: 'Please enter a valid phone number.' });
+    }
+
+    // Check for existing application by email
+    const existingByEmail = await Admission.findOne({ email: normalizedEmail });
+    if (existingByEmail) {
+      return res.status(409).json({ message: 'An application already exists for this email.' });
+    }
+
+    // Verify OTP
+    const validOtpRecord = await OTP.findOne({ email: normalizedEmail, otp });
+    if (!validOtpRecord) {
+      return res.status(400).json({ message: 'Invalid or expired OTP. Please request a new one.' });
     }
 
     const existingByPhone = await Admission.findOne({
@@ -46,6 +94,9 @@ const submitForm = async (req, res) => {
     });
 
     await admission.save();
+
+    // Remove OTP after successful submission
+    await OTP.deleteMany({ email: normalizedEmail });
 
     // Send email to admin/department and acknowledgement to applicant
     await sendAdminNotification(admission);
@@ -132,4 +183,4 @@ const deleteForm = async (req, res) => {
   }
 };
 
-module.exports = { submitForm, getAllForms, approveForm, rejectForm, updateForm, deleteForm };
+module.exports = { sendOTP, submitForm, getAllForms, approveForm, rejectForm, updateForm, deleteForm };
