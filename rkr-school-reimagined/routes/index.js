@@ -67,24 +67,26 @@ router.get('/status', async (req, res) => {
   const user = checkUser(req);
   if (!user) return res.redirect('/login');
   
-  // Find admissions by email (primary) or userId (if valid ObjectId)
-  let query = { email: user.email.toLowerCase() };
-  if (user.id && user.id.length === 24) { // Basic check for ObjectId length
-    query = { 
-      $or: [
-        { userId: user.id },
-        { email: user.email.toLowerCase() }
-      ]
-    };
+  // Find admissions linked to this user ID
+  let admissions = [];
+  
+  if (user.id && user.id.length === 24) {
+    admissions = await Admission.find({ userId: user.id });
   }
 
-  const admissions = await Admission.find(query);
-
-  // Link unlinked admissions to this user
-  for (let admission of admissions) {
-    if (!admission.userId) {
-      admission.userId = user.id;
-      await admission.save();
+  // If no records found by ID, try finding by email to link them
+  if (admissions.length === 0 && user.email) {
+    const emailAdmissions = await Admission.find({ 
+      email: user.email.toLowerCase(),
+      userId: null // Only pick up unlinked ones to prevent "stealing" or leaking
+    });
+    
+    if (emailAdmissions.length > 0) {
+      for (let adm of emailAdmissions) {
+        adm.userId = user.id;
+        await adm.save();
+      }
+      admissions = emailAdmissions;
     }
   }
 
