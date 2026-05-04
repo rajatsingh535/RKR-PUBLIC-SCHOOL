@@ -126,9 +126,16 @@ const getAllForms = async (req, res) => {
 // ─── APPROVE FORM (PUT /api/admission/approve/:id) — Admin only ────────────────
 const approveForm = async (req, res) => {
   try {
+    const updateData = { status: 'Approved' };
+    
+    // Allow admin to set feesAmount along with approval
+    if (req.body && req.body.feesAmount !== undefined) {
+      updateData.feesAmount = Number(req.body.feesAmount) || 0;
+    }
+
     const admission = await Admission.findByIdAndUpdate(
       req.params.id,
-      { status: 'Approved' },
+      updateData,
       { new: true }
     );
     if (!admission) return res.status(404).json({ message: 'Record not found' });
@@ -191,9 +198,15 @@ const uploadDocument = async (req, res) => {
 
     const admission = await Admission.findById(req.params.id);
     if (!admission) return res.status(404).json({ message: 'Admission not found' });
-    
-    // Authorization check
-    if (req.user && req.user.role !== 'admin' && String(admission.userId) !== String(req.user.id)) {
+
+    const isAdmin = req.user && req.user.role === 'admin';
+    const sameUserId = req.user && String(admission.userId) === String(req.user.id);
+    const sameEmail =
+      req.user &&
+      req.user.email &&
+      admission.email &&
+      String(admission.email).toLowerCase() === String(req.user.email).toLowerCase();
+    if (req.user && !isAdmin && !sameUserId && !sameEmail) {
       return res.status(403).json({ message: 'Unauthorized access to this application' });
     }
 
@@ -212,12 +225,27 @@ const payFees = async (req, res) => {
     const admission = await Admission.findById(req.params.id);
     if (!admission) return res.status(404).json({ message: 'Admission not found' });
 
-    // Authorization check
-    if (req.user && req.user.role !== 'admin' && String(admission.userId) !== String(req.user.id)) {
+    const isAdmin = req.user && req.user.role === 'admin';
+    const sameUserId = req.user && String(admission.userId) === String(req.user.id);
+    const sameEmail =
+      req.user &&
+      req.user.email &&
+      admission.email &&
+      String(admission.email).toLowerCase() === String(req.user.email).toLowerCase();
+    if (req.user && !isAdmin && !sameUserId && !sameEmail) {
       return res.status(403).json({ message: 'Unauthorized access to this application' });
     }
 
+    if (admission.feesPaid) {
+      return res.status(400).json({ message: 'Fees already paid' });
+    }
+
+    // Generate a unique transaction ID
+    const txnId = 'RKR' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+
     admission.feesPaid = true;
+    admission.feesPaidAt = new Date();
+    admission.transactionId = req.body.transactionId || txnId;
     await admission.save();
 
     res.json({ message: 'Fees paid successfully', admission });

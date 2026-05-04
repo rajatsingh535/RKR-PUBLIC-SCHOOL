@@ -1,17 +1,28 @@
 const jwt = require('jsonwebtoken');
 
+// Must match controllers/authController.js so tokens verify when JWT_SECRET is unset
+const JWT_SECRET = process.env.JWT_SECRET || 'rkr-school-secret-key-2026';
+
+const isApiRequest = (req) => req.originalUrl.startsWith('/api/');
+
 // Protect routes — requires login
 const protect = (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
+    if (isApiRequest(req)) {
+      return res.status(401).json({ message: 'Please log in to continue.' });
+    }
     return res.redirect('/login');
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
     res.clearCookie('token');
+    if (isApiRequest(req)) {
+      return res.status(401).json({ message: 'Session expired. Please log in again.' });
+    }
     return res.redirect('/login');
   }
 };
@@ -25,7 +36,7 @@ const adminOnly = (req, res, next) => {
     const token = req.cookies.token;
     if (token) {
       try {
-        user = jwt.verify(token, process.env.JWT_SECRET);
+        user = jwt.verify(token, JWT_SECRET);
         req.user = user;
       } catch (err) {
         // invalid token handled by auth check below
@@ -49,7 +60,7 @@ const optionalAuth = (req, res, next) => {
   const token = req.cookies.token;
   if (token) {
     try {
-      req.user = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = jwt.verify(token, JWT_SECRET);
     } catch (e) { /* token expired, ignore */ }
   }
   next();
@@ -60,7 +71,7 @@ const checkUser = (req) => {
   const token = req.cookies.token;
   if (!token) return null;
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    return jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return null;
   }

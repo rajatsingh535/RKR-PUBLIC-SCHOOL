@@ -173,12 +173,21 @@ handleForm('admissionForm', '/api/admission/submit', '/');
 // Admin Actions
 const updateStatus = async (id, status) => {
     try {
-        // Use the new RESTful endpoints
         const endpoint = status === 'Approved' ? `/api/admission/approve/${id}` : `/api/admission/reject/${id}`;
         
+        let bodyData = {};
+
+        // If approving, prompt admin for the fees amount
+        if (status === 'Approved') {
+            const feesAmount = prompt('Enter Admission Fees Amount (₹):', '5000');
+            if (feesAmount === null) return; // User cancelled
+            bodyData.feesAmount = feesAmount;
+        }
+
         const response = await fetch(endpoint, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
         });
         const result = await response.json();
         if (response.ok) {

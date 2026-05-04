@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 const connectDB = require('./config/db');
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware — generous JSON limit for student document uploads (base64 data URLs)
+app.use(express.json({ limit: '8mb' }));
+app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(cookieParser());
 app.use(cors());
 
