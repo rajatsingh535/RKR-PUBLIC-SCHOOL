@@ -10,6 +10,7 @@ const {
   deleteForm,
   uploadDocument,
   payFees,
+  verifyRazorpayPayment,
   verifyFeesPayment,
   rejectFeeSubmission,
   updateFeesAmount,
@@ -42,8 +43,11 @@ router.delete('/delete/:id', adminOnly, deleteForm);
 // POST /api/admission/upload/:id — Protect
 router.post('/upload/:id', protect, uploadDocument);
 
-// POST /api/admission/pay-fees/:id — Student submits UTR after PhonePe QR pay
+// POST /api/admission/pay-fees/:id — Create Razorpay order for student payment
 router.post('/pay-fees/:id', protect, payFees);
+
+// POST /api/admission/verify-payment/:id — Student payment signature verify
+router.post('/verify-payment/:id', protect, verifyRazorpayPayment);
 
 // PUT /api/admission/verify-fees/:id — Admin verifies payment & issues receipt
 router.put('/verify-fees/:id', adminOnly, verifyFeesPayment);

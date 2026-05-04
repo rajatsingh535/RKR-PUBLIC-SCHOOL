@@ -1,9 +1,28 @@
 const Admission = require('../models/Admission');
 const OTP = require('../models/OTP');
 const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail } = require('../config/email');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizePhone = (value = '') => value.replace(/\D/g, '');
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+const isRazorpayConfigured = () => Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
+const razorpay = isRazorpayConfigured()
+  ? new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET })
+  : null;
+
+const hasAdmissionAccess = (user, admission) => {
+  if (!user || !admission) return false;
+  if (user.role === 'admin') return true;
+  const sameUserId = String(admission.userId) === String(user.id);
+  const sameEmail =
+    user.email &&
+    admission.email &&
+    String(admission.email).toLowerCase() === String(user.email).toLowerCase();
+  return sameUserId || sameEmail;
+};
 
 // ─── SEND OTP (POST /api/admission/send-otp) — Public ────────────────────────
 const sendOTP = async (req, res) => {
@@ -219,23 +238,20 @@ const uploadDocument = async (req, res) => {
   }
 };
 
-// ─── SUBMIT FEE PAYMENT REFERENCE (POST /api/admission/pay-fees/:id) — Student ───
+// ─── CREATE RAZORPAY ORDER (POST /api/admission/pay-fees/:id) — Student ───────
 const payFees = async (req, res) => {
   try {
+    if (!isRazorpayConfigured() || !razorpay) {
+      return res.status(500).json({ message: 'Razorpay is not configured on server.' });
+    }
     if (req.user && req.user.role === 'admin') {
-      return res.status(400).json({ message: 'Use the admin dashboard to verify fee payments.' });
+      return res.status(400).json({ message: 'Admin payments are disabled from this endpoint.' });
     }
 
     const admission = await Admission.findById(req.params.id);
     if (!admission) return res.status(404).json({ message: 'Admission not found' });
 
-    const sameUserId = req.user && String(admission.userId) === String(req.user.id);
-    const sameEmail =
-      req.user &&
-      req.user.email &&
-      admission.email &&
-      String(admission.email).toLowerCase() === String(req.user.email).toLowerCase();
-    if (req.user && !sameUserId && !sameEmail) {
+    if (!hasAdmissionAccess(req.user, admission)) {
       return res.status(403).json({ message: 'Unauthorized access to this application' });
     }
 
@@ -246,26 +262,83 @@ const payFees = async (req, res) => {
       return res.status(400).json({ message: 'Fee amount has not been set yet. Contact the school.' });
     }
     if (admission.feesPaid) {
-      return res.status(400).json({ message: 'Fees already verified and paid.' });
-    }
-    if (admission.feesVerificationPending) {
-      return res.status(400).json({ message: 'Your payment is already awaiting verification.' });
+      return res.status(400).json({ message: 'Fees already paid.' });
     }
 
-    const paymentReference = String(req.body.paymentReference || '').trim().replace(/\s+/g, ' ');
-    if (paymentReference.length < 8) {
-      return res.status(400).json({ message: 'Please enter your PhonePe / UPI transaction reference (UTR).' });
-    }
+    const amountPaise = Math.round(Number(admission.feesAmount) * 100);
+    const receipt = `RKRADM_${String(admission._id).slice(-8)}_${Date.now()}`.slice(0, 40);
+    const order = await razorpay.orders.create({
+      amount: amountPaise,
+      currency: 'INR',
+      receipt,
+      notes: {
+        admissionId: String(admission._id),
+        studentName: admission.studentName,
+      },
+    });
 
-    admission.feesVerificationPending = true;
-    admission.studentPaymentReference = paymentReference;
-    admission.feesSubmittedAt = new Date();
+    admission.razorpayOrderId = order.id;
+    admission.feesVerificationPending = false;
+    admission.studentPaymentReference = '';
+    admission.feesSubmittedAt = null;
     await admission.save();
 
     res.json({
-      message: 'Payment reference submitted. The school will verify and confirm shortly.',
-      admission,
+      message: 'Razorpay order created.',
+      keyId: RAZORPAY_KEY_ID,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      studentName: admission.studentName,
+      email: admission.email,
+      phone: admission.phone,
     });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error: ' + err.message });
+  }
+};
+
+// ─── VERIFY RAZORPAY PAYMENT (POST /api/admission/verify-payment/:id) — Student ─
+const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Missing Razorpay verification details.' });
+    }
+
+    const admission = await Admission.findById(req.params.id);
+    if (!admission) return res.status(404).json({ message: 'Admission not found' });
+    if (!hasAdmissionAccess(req.user, admission)) {
+      return res.status(403).json({ message: 'Unauthorized access to this application' });
+    }
+    if (admission.feesPaid) {
+      return res.status(400).json({ message: 'Fees already paid.' });
+    }
+    if (admission.razorpayOrderId && admission.razorpayOrderId !== razorpay_order_id) {
+      return res.status(400).json({ message: 'Invalid payment order for this application.' });
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Payment signature verification failed.' });
+    }
+
+    admission.feesPaid = true;
+    admission.feesPaidAt = new Date();
+    admission.transactionId = razorpay_payment_id;
+    admission.razorpayPaymentId = razorpay_payment_id;
+    admission.razorpayOrderId = razorpay_order_id;
+    admission.paymentGateway = 'razorpay';
+    admission.receiptNumber = admission.receiptNumber || genReceiptNo();
+    admission.feesVerificationPending = false;
+    admission.studentPaymentReference = '';
+    admission.feesSubmittedAt = null;
+    await admission.save();
+
+    res.json({ message: 'Payment verified successfully. Receipt generated.', admission });
   } catch (err) {
     res.status(500).json({ message: 'Server error: ' + err.message });
   }
@@ -363,6 +436,7 @@ module.exports = {
   deleteForm,
   uploadDocument,
   payFees,
+  verifyRazorpayPayment,
   verifyFeesPayment,
   rejectFeeSubmission,
   updateFeesAmount,

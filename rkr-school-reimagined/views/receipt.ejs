@@ -28,7 +28,7 @@
 <div class="receipt-wrap">
     <div class="receipt-card">
         <h1>RKR Public School — Fee Receipt</h1>
-        <p class="receipt-meta">Official receipt issued after verified PhonePe payment</p>
+        <p class="receipt-meta">Official receipt issued after verified online/offline payment</p>
 
         <div class="receipt-row"><span>Receipt No.</span><span><%= admission.receiptNumber || admission.transactionId || '—' %></span></div>
         <div class="receipt-row"><span>Issue date</span><span><%= admission.feesPaidAt ? new Date(admission.feesPaidAt).toLocaleString('en-IN') : '—' %></span></div>
@@ -37,7 +37,7 @@
         <div class="receipt-row"><span>Parent / Guardian</span><span><%= admission.parentName %></span></div>
         <div class="receipt-row"><span>Registered email</span><span><%= admission.email %></span></div>
         <div class="receipt-row"><span>Mobile</span><span><%= admission.phone %></span></div>
-        <div class="receipt-row"><span>Paid via</span><span>PhonePe / UPI (verified)</span></div>
+        <div class="receipt-row"><span>Paid via</span><span><%= admission.paymentGateway === 'razorpay' ? 'Razorpay (Online)' : 'Manual / UPI (verified)' %></span></div>
         <div class="receipt-row"><span>Transaction reference</span><span><%= admission.transactionId || '—' %></span></div>
         <div class="receipt-row"><span>Received by (account)</span><span><%= payeeName %></span></div>
 

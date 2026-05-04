@@ -136,9 +136,9 @@
                             </div>
                         <% } else { %>
                             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center;">
-                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Admission Fees — PhonePe</h4>
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Admission Fees — Razorpay</h4>
                                 <h2 style="font-size: 2.5rem; color: var(--accent); margin-bottom: 0.5rem;">₹<%= record.feesAmount || 0 %></h2>
-                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">Pay the exact amount using the QR below. After paying, paste your PhonePe transaction ID / UTR so the office can verify.</p>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">Pay securely using Razorpay. Receipt is generated automatically after successful payment verification.</p>
 
                                 <% if (record.feesPaid) { %>
                                     <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #d1fae5; color: #065f46; padding: 0.8rem 2rem; border-radius: 8px; font-weight: 700;">
@@ -150,24 +150,10 @@
                                     <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
                                         <a href="/receipt/<%= record._id %>" target="_blank" rel="noopener" class="btn-yellow" style="display:inline-block;padding:0.75rem 1.5rem;text-decoration:none;">View / print receipt</a>
                                     </div>
-                                <% } else if (record.feesVerificationPending) { %>
-                                    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:1.25rem;text-align:left;max-width:420px;margin:0 auto;">
-                                        <p style="margin:0 0 0.5rem 0;font-weight:700;color:#92400e;"><i class="fas fa-clock"></i> Verification in progress</p>
-                                        <p style="margin:0;font-size:0.9rem;color:var(--text-muted);">Submitted reference: <strong style="color:var(--primary);"><%= record.studentPaymentReference %></strong></p>
-                                        <% if (record.feesSubmittedAt) { %>
-                                            <p style="margin:0.75rem 0 0;font-size:0.82rem;color:var(--text-muted);">Submitted: <%= new Date(record.feesSubmittedAt).toLocaleString('en-IN') %></p>
-                                        <% } %>
-                                    </div>
                                 <% } else if (record.feesAmount > 0) { %>
-                                    <div style="background:#fff;border-radius:12px;padding:1.25rem;display:inline-block;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-bottom:1.25rem;">
-                                        <img src="/images/phonepe-qr.png" alt="Scan to pay with PhonePe" width="240" height="240" style="display:block;margin:0 auto;max-width:100%;height:auto;"
-                                            onerror="this.onerror=null;this.src='/images/qr-phonepe.webp';">
-                                    </div>
-                                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Scan with the PhonePe app. Pay <strong>₹<%= record.feesAmount %></strong> exactly.</p>
-                                    <div style="max-width: 420px; margin: 0 auto; text-align: left;">
-                                        <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--primary);margin-bottom:0.35rem;">Transaction reference (UTR / ID)</label>
-                                        <input type="text" id="feeRef_<%= record._id %>" autocomplete="off" placeholder="Paste from PhonePe payment details" style="width:100%;padding:0.65rem;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;margin-bottom:0.75rem;">
-                                        <button type="button" onclick="submitFeeReference('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-small btn-small-primary" style="width:100%;padding:0.75rem;">Submit for verification</button>
+                                    <div style="max-width: 420px; margin: 0 auto; text-align: center;">
+                                        <button type="button" onclick="payFees('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="width:100%;padding:0.75rem;">Pay with Razorpay</button>
+                                        <p style="margin-top:0.75rem;font-size:0.84rem;color:var(--text-muted);">Secure cards, UPI, netbanking and wallets are supported.</p>
                                     </div>
                                 <% } else { %>
                                     <p style="color: var(--text-muted);">Fee amount not yet set by administration. Contact the school office.</p>
@@ -210,6 +196,7 @@
     </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     function switchTab(element, tabId) {
         // Find parent tabs container and content container
@@ -275,36 +262,82 @@
         reader.readAsDataURL(file);
     }
 
-    async function submitFeeReference(id) {
+    async function payFees(id) {
         const btn = document.getElementById(`btnPay_${id}`);
-        const input = document.getElementById(`feeRef_${id}`);
-        const ref = input && input.value ? input.value.trim() : '';
-        if (ref.length < 8) {
-            return alert('Please enter your PhonePe transaction reference (usually 12+ digits).');
+        if (!window.Razorpay) {
+            return alert('Razorpay failed to load. Please refresh and try again.');
         }
-
-        btn.innerHTML = '<span class="loader"></span> Sending...';
+        btn.innerHTML = '<span class="loader"></span> Processing...';
         btn.disabled = true;
 
         try {
-            const res = await fetch(`/api/admission/pay-fees/${id}`, {
+            const orderRes = await fetch(`/api/admission/pay-fees/${id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ paymentReference: ref })
+                credentials: 'same-origin'
             });
-            const data = await res.json();
-            if (res.ok) {
-                alert(data.message || 'Submitted.');
-                window.location.reload();
-            } else {
-                alert(data.message || 'Submission failed.');
-                btn.innerHTML = 'Submit for verification';
+            const orderData = await orderRes.json();
+            if (!orderRes.ok) {
+                alert(orderData.message || 'Unable to create payment order.');
+                btn.innerHTML = 'Pay with Razorpay';
                 btn.disabled = false;
+                return;
             }
+
+            const options = {
+                key: orderData.keyId,
+                amount: orderData.amount,
+                currency: orderData.currency || 'INR',
+                name: 'RKR Public School',
+                description: `Admission Fees - ${orderData.studentName || 'Student'}`,
+                order_id: orderData.orderId,
+                prefill: {
+                    name: orderData.studentName || '',
+                    email: orderData.email || '',
+                    contact: orderData.phone || ''
+                },
+                theme: { color: '#4f46e5' },
+                modal: {
+                    ondismiss: function () {
+                        btn.innerHTML = 'Pay with Razorpay';
+                        btn.disabled = false;
+                    }
+                },
+                handler: async function (response) {
+                    try {
+                        const verifyRes = await fetch(`/api/admission/verify-payment/${id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(response)
+                        });
+                        const verifyData = await verifyRes.json();
+                        if (verifyRes.ok) {
+                            alert(verifyData.message || 'Payment successful.');
+                            window.location.reload();
+                        } else {
+                            alert(verifyData.message || 'Payment verification failed.');
+                            btn.innerHTML = 'Pay with Razorpay';
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        alert('Could not verify payment. Please contact admin with your payment ID.');
+                        btn.innerHTML = 'Pay with Razorpay';
+                        btn.disabled = false;
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (resp) {
+                alert((resp.error && resp.error.description) || 'Payment failed. Please try again.');
+                btn.innerHTML = 'Pay with Razorpay';
+                btn.disabled = false;
+            });
+            rzp.open();
         } catch (err) {
             alert('Error connecting to server.');
-            btn.innerHTML = 'Submit for verification';
+            btn.innerHTML = 'Pay with Razorpay';
             btn.disabled = false;
         }
     }

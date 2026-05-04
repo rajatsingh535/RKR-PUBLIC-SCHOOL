@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap');
 
-/* ============================================================
-   ROOT VARIABLES
-   ============================================================ */
+
 :root {
   --primary: #0a192f;
   --primary-light: #112240;
@@ -21,9 +19,7 @@
   --transition: all 0.35s ease;
 }
 
-/* ============================================================
-   RESET
-   ============================================================ */
+
 *, *::before, *::after {
   margin: 0;
   padding: 0;
