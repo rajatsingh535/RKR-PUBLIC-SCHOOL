@@ -8,7 +8,7 @@ const checkUser = (req) => {
   const token = req.cookies.token;
   if (!token) return null;
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    return jwt.verify(token, process.env.JWT_SECRET || 'rkr-school-secret-key-2026');
   } catch (err) {
     return null;
   }
@@ -68,7 +68,22 @@ router.get('/status', async (req, res) => {
   const user = checkUser(req);
   if (!user) return res.redirect('/login');
   
-  const admissions = await Admission.find({ userId: user.id });
+  // Find admissions by userId OR by email (to catch those who applied before registering)
+  const admissions = await Admission.find({ 
+    $or: [
+      { userId: user.id },
+      { email: user.email.toLowerCase() }
+    ]
+  });
+
+  // Link unlinked admissions to this user
+  for (let admission of admissions) {
+    if (!admission.userId) {
+      admission.userId = user.id;
+      await admission.save();
+    }
+  }
+
   res.render('status', { user, admissions });
 });
 
