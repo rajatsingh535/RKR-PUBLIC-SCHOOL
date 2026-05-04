@@ -85,6 +85,9 @@
                             <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Phone</p><p style="font-weight:700;color:var(--primary);"><%= record.phone %></p></div>
                             <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Email</p><p style="font-weight:700;color:var(--primary);"><%= record.email %></p></div>
                             <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Date of Birth</p><p style="font-weight:700;color:var(--primary);"><%= record.dob %></p></div>
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Gender</p><p style="font-weight:700;color:var(--primary);"><%= record.gender %></p></div>
+                            <div><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Occupation</p><p style="font-weight:700;color:var(--primary);"><%= record.occupation || 'N/A' %></p></div>
+                            <div style="grid-column: 1 / -1;"><p style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.3rem;">Residential Address</p><p style="font-weight:700;color:var(--primary);"><%= record.address %></p></div>
                         </div>
                         <% if (record.status === 'Pending') { %>
                             <div style="padding: 1.2rem 1.5rem; background: #fffbf2; border: 1px solid #e9d8a6; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
