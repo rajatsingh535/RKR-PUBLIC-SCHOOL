@@ -17,6 +17,10 @@ const admissionSchema = new mongoose.Schema({
   feesAmount:    { type: Number, default: 0 },
   feesPaidAt:    { type: Date, default: null },
   transactionId: { type: String, default: '' },
+  receiptNumber: { type: String, default: '' },
+  feesVerificationPending: { type: Boolean, default: false },
+  studentPaymentReference: { type: String, default: '' },
+  feesSubmittedAt: { type: Date, default: null },
   results:       [{ subject: String, marks: String, grade: String, addedAt: { type: Date, default: Date.now } }],
   submittedAt:   { type: Date, default: Date.now }
 });

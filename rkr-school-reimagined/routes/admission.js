@@ -10,8 +10,10 @@ const {
   deleteForm,
   uploadDocument,
   payFees,
+  verifyFeesPayment,
+  rejectFeeSubmission,
   updateFeesAmount,
-  addResult
+  addResult,
 } = require('../controllers/admissionController');
 
 const { optionalAuth, adminOnly, protect } = require('../middleware/auth');
@@ -40,8 +42,14 @@ router.delete('/delete/:id', adminOnly, deleteForm);
 // POST /api/admission/upload/:id — Protect
 router.post('/upload/:id', protect, uploadDocument);
 
-// POST /api/admission/pay-fees/:id — Protect
+// POST /api/admission/pay-fees/:id — Student submits UTR after PhonePe QR pay
 router.post('/pay-fees/:id', protect, payFees);
+
+// PUT /api/admission/verify-fees/:id — Admin verifies payment & issues receipt
+router.put('/verify-fees/:id', adminOnly, verifyFeesPayment);
+
+// PUT /api/admission/reject-fee-submission/:id — Admin clears bad submission
+router.put('/reject-fee-submission/:id', adminOnly, rejectFeeSubmission);
 
 // PUT /api/admission/fees/:id — Admin only
 router.put('/fees/:id', adminOnly, updateFeesAmount);

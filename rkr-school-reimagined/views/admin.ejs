@@ -146,9 +146,25 @@
                             <button onclick="updateFees('<%= record._id %>')" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Save Fees</button>
                         </div>
                         <% if (record.feesPaid) { %>
-                            <p style="color: #059669; font-weight: bold; font-size: 0.85rem; margin-top: 0.5rem;">Fees Paid ✅</p>
+                            <p style="color: #059669; font-weight: bold; font-size: 0.85rem; margin-top: 0.5rem;">Fees verified &amp; paid ✅</p>
+                            <% if (record.receiptNumber) { %>
+                                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.35rem;">Receipt: <strong><%= record.receiptNumber %></strong></p>
+                            <% } %>
+                            <a href="/receipt/<%= record._id %>" target="_blank" rel="noopener" style="display:inline-block;margin-top:0.6rem;font-size:0.82rem;color:var(--accent);font-weight:700;">Open receipt</a>
+                        <% } else if (record.feesVerificationPending) { %>
+                            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:0.85rem;margin-top:0.5rem;">
+                                <p style="margin:0 0 0.4rem 0;font-weight:700;color:#92400e;font-size:0.88rem;">Student submitted payment reference</p>
+                                <p style="margin:0;font-size:0.85rem;"><strong>UTR / Ref:</strong> <%= record.studentPaymentReference %></p>
+                                <% if (record.feesSubmittedAt) { %>
+                                    <p style="margin:0.4rem 0 0;font-size:0.78rem;color:var(--text-muted);"><%= new Date(record.feesSubmittedAt).toLocaleString('en-IN') %></p>
+                                <% } %>
+                                <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+                                    <button type="button" onclick="verifyFeePayment('<%= record._id %>')" style="background:#059669;color:#fff;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;">Verify &amp; issue receipt</button>
+                                    <button type="button" onclick="rejectFeeSubmission('<%= record._id %>')" style="background:#f1f5f9;color:#64748b;border:none;padding:0.45rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.82rem;">Reject / clear</button>
+                                </div>
+                            </div>
                         <% } else { %>
-                            <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">Fees Pending ⏳</p>
+                            <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">Awaiting student payment (QR on student dashboard) ⏳</p>
                         <% } %>
                     </div>
 
@@ -218,6 +234,38 @@
                 alert(data.message || 'Failed to add result');
             }
         } catch (err) {
+            alert('Error connecting to server.');
+        }
+    }
+
+    async function verifyFeePayment(id) {
+        if (!confirm('Confirm that you received this payment in PhonePe? A receipt will be issued to the student.')) return;
+        try {
+            const res = await fetch(`/api/admission/verify-fees/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message || 'Verified.');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to verify');
+            }
+        } catch (e) {
+            alert('Error connecting to server.');
+        }
+    }
+
+    async function rejectFeeSubmission(id) {
+        if (!confirm('Clear this submission so the student can enter a different reference?')) return;
+        try {
+            const res = await fetch(`/api/admission/reject-fee-submission/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message || 'Cleared.');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed');
+            }
+        } catch (e) {
             alert('Error connecting to server.');
         }
     }

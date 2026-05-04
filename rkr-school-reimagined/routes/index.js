@@ -63,6 +63,37 @@ router.get('/register', (req, res) => {
   res.redirect('/login');
 });
 
+const canAccessAdmission = (user, admission) => {
+  if (!user || !admission) return false;
+  if (user.role === 'admin') return true;
+  if (String(admission.userId) === String(user.id)) return true;
+  if (
+    user.email &&
+    admission.email &&
+    String(admission.email).toLowerCase() === String(user.email).toLowerCase()
+  ) {
+    return true;
+  }
+  return false;
+};
+
+router.get('/receipt/:id', async (req, res) => {
+  const user = checkUser(req);
+  if (!user) return res.redirect('/login');
+
+  const admission = await Admission.findById(req.params.id);
+  if (!admission) return res.status(404).send('Application not found.');
+  if (!admission.feesPaid) {
+    return res.status(403).send('Receipt is available only after the school verifies your payment.');
+  }
+  if (!canAccessAdmission(user, admission)) {
+    return res.status(403).send('You are not allowed to view this receipt.');
+  }
+
+  const payeeName = process.env.FEE_PAYEE_NAME || 'RAJAT SINGH';
+  res.render('receipt', { user, admission, payeeName });
+});
+
 router.get('/status', async (req, res) => {
   const user = checkUser(req);
   if (!user) return res.redirect('/login');

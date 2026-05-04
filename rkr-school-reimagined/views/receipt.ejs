@@ -1,0 +1,54 @@
+<%- include('partials/header') %>
+
+<style>
+    .receipt-wrap { max-width: 640px; margin: 2rem auto; padding: 0 1rem 3rem; }
+    .receipt-card {
+        background: #fff; border: 1px solid var(--border, #e2e8f0); border-radius: 12px;
+        padding: 2rem; box-shadow: var(--card-shadow, 0 10px 30px rgba(0,0,0,0.06));
+    }
+    .receipt-card h1 { color: var(--primary); font-size: 1.55rem; margin: 0 0 0.25rem 0; }
+    .receipt-meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px dashed #e2e8f0; font-size: 0.95rem; }
+    .receipt-row span:first-child { color: var(--text-muted); }
+    .receipt-row span:last-child { font-weight: 700; color: var(--primary); text-align: right; }
+    .receipt-amt {
+        margin-top: 1.25rem; padding-top: 1rem; border-top: 2px solid var(--primary);
+        font-size: 1.35rem; font-weight: 800; color: var(--accent); text-align: center;
+    }
+    .receipt-note { margin-top: 1.25rem; font-size: 0.82rem; color: var(--text-muted); text-align: center; line-height: 1.45; }
+    .receipt-actions { margin-top: 1.75rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    @media print {
+        body * { visibility: hidden; }
+        .receipt-wrap, .receipt-wrap * { visibility: visible; }
+        .receipt-wrap { position: absolute; left: 0; top: 0; margin: 0; padding: 1rem; width: 100%; max-width: none; }
+        .no-print { display: none !important; }
+    }
+</style>
+
+<div class="receipt-wrap">
+    <div class="receipt-card">
+        <h1>RKR Public School — Fee Receipt</h1>
+        <p class="receipt-meta">Official receipt issued after verified PhonePe payment</p>
+
+        <div class="receipt-row"><span>Receipt No.</span><span><%= admission.receiptNumber || admission.transactionId || '—' %></span></div>
+        <div class="receipt-row"><span>Issue date</span><span><%= admission.feesPaidAt ? new Date(admission.feesPaidAt).toLocaleString('en-IN') : '—' %></span></div>
+        <div class="receipt-row"><span>Student</span><span><%= admission.studentName %></span></div>
+        <div class="receipt-row"><span>Class applied</span><span>Class <%= admission.classApplying %></span></div>
+        <div class="receipt-row"><span>Parent / Guardian</span><span><%= admission.parentName %></span></div>
+        <div class="receipt-row"><span>Registered email</span><span><%= admission.email %></span></div>
+        <div class="receipt-row"><span>Mobile</span><span><%= admission.phone %></span></div>
+        <div class="receipt-row"><span>Paid via</span><span>PhonePe / UPI (verified)</span></div>
+        <div class="receipt-row"><span>Transaction reference</span><span><%= admission.transactionId || '—' %></span></div>
+        <div class="receipt-row"><span>Received by (account)</span><span><%= payeeName %></span></div>
+
+        <div class="receipt-amt">Amount received: ₹<%= admission.feesAmount || 0 %></div>
+        <p class="receipt-note">This is a computer-generated receipt for admission fees. For queries, contact the school office.</p>
+
+        <div class="receipt-actions no-print">
+            <button type="button" class="btn-yellow" onclick="window.print()">Print / Save as PDF</button>
+            <a href="/status" class="btn-small btn-small-primary" style="display:inline-block;padding:0.65rem 1.25rem;border-radius:8px;text-decoration:none;background:var(--primary);color:#fff;font-weight:700;">Back to dashboard</a>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
