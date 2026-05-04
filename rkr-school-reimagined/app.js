@@ -10,13 +10,23 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 const connectDB = require('./config/db');
-connectDB();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
+
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database Connection Middleware Error:', err.message);
+    res.status(500).json({ message: 'Database connection error. Please check your connection string or network.' });
+  }
+});
 
 // Set View Engine
 app.set('view engine', 'ejs');
