@@ -4,10 +4,16 @@
     <div class="container">
         <div class="glass-card" style="max-width: 480px; margin: 0 auto; padding: 3.5rem;">
             
-            <div style="text-align: center; margin-bottom: 2.5rem;">
+            <div id="loginHeader" style="text-align: center; margin-bottom: 2.5rem;">
                 <img src="/images/logo.png" alt="Logo" style="height: 60px; margin: 0 auto 1rem;">
                 <h2 style="font-size: 2.2rem; color: var(--primary);">Welcome Back</h2>
                 <p style="color: var(--text-muted);">Login to access your account</p>
+            </div>
+
+            <div id="registerHeader" style="text-align: center; margin-bottom: 2.5rem; display: none;">
+                <img src="/images/logo.png" alt="Logo" style="height: 60px; margin: 0 auto 1rem;">
+                <h2 style="font-size: 2.2rem; color: var(--primary);">Create Account</h2>
+                <p style="color: var(--text-muted);">Register to track your admission</p>
             </div>
 
             <% if (typeof error !== 'undefined' && error) { %>
@@ -16,7 +22,7 @@
                 </div>
             <% } %>
 
-            <!-- Standard HTML form POST → Express handles redirect -->
+            <!-- Login Form -->
             <form id="loginForm" action="/api/auth/login" method="POST">
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label>Email Address</label>
@@ -31,10 +37,33 @@
                 </button>
             </form>
 
+            <!-- Register Form (Hidden by default) -->
+            <form id="registerForm" action="/api/auth/register" method="POST" style="display: none;">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Full Name</label>
+                    <input type="text" name="name" placeholder="Enter your full name" required autocomplete="name">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Email Address</label>
+                    <input type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label>Password <span style="color: var(--text-muted); font-weight: 400;">(min. 6 chars)</span></label>
+                    <input type="password" name="password" placeholder="Create a password" required minlength="6" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn-yellow" style="width: 100%; text-align: center; font-size: 1rem; padding: 1rem;">
+                    <i class="fas fa-user-plus" style="margin-right: 0.5rem;"></i>Create Account
+                </button>
+            </form>
+
             <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-                <p style="color: var(--text-muted); font-size: 0.92rem;">
+                <p id="toggleToRegister" style="color: var(--text-muted); font-size: 0.92rem;">
                     Don't have an account? 
-                    <a href="/register" style="color: var(--accent); font-weight: 700;">Register here</a>
+                    <a href="javascript:void(0)" onclick="toggleAuth('register')" style="color: var(--accent); font-weight: 700;">Register here</a>
+                </p>
+                <p id="toggleToLogin" style="color: var(--text-muted); font-size: 0.92rem; display: none;">
+                    Already have an account? 
+                    <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color: var(--accent); font-weight: 700;">Login here</a>
                 </p>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.8rem;">
                     <i class="fas fa-shield-alt" style="color: var(--accent); margin-right: 0.3rem;"></i>
@@ -44,5 +73,34 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleAuth(mode) {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const loginHeader = document.getElementById('loginHeader');
+        const registerHeader = document.getElementById('registerHeader');
+        const toggleToRegister = document.getElementById('toggleToRegister');
+        const toggleToLogin = document.getElementById('toggleToLogin');
+
+        if (mode === 'register') {
+            loginForm.style.display = 'none';
+            loginHeader.style.display = 'none';
+            toggleToRegister.style.display = 'none';
+            
+            registerForm.style.display = 'block';
+            registerHeader.style.display = 'block';
+            toggleToLogin.style.display = 'block';
+        } else {
+            registerForm.style.display = 'none';
+            registerHeader.style.display = 'none';
+            toggleToLogin.style.display = 'none';
+            
+            loginForm.style.display = 'block';
+            loginHeader.style.display = 'block';
+            toggleToRegister.style.display = 'block';
+        }
+    }
+</script>
 
 <%- include('partials/footer') %>

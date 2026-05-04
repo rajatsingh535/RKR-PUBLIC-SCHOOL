@@ -45,7 +45,7 @@ const register = async (req, res) => {
     const user = new User({ name, email, password, role: 'student' });
     await user.save();
 
-    const token = setTokenCookie(res, { id: user._id, role: user.role, name: user.name });
+    const token = setTokenCookie(res, { id: user._id, role: user.role, name: user.name, email: user.email });
     if (!token) throw new Error('Failed to generate authentication token');
 
     return res.status(201).json({ 
@@ -75,7 +75,7 @@ const login = async (req, res) => {
 
     // 2. Check fixed student
     if (emailLower === FIXED_STUDENT.email && password === FIXED_STUDENT.password) {
-      setTokenCookie(res, { id: 'student_fixed', role: 'student', name: FIXED_STUDENT.name });
+      setTokenCookie(res, { id: 'student_fixed', role: 'student', name: FIXED_STUDENT.name, email: FIXED_STUDENT.email });
       return res.json({ success: true, message: 'Welcome back!', role: 'student' });
     }
 
@@ -90,7 +90,7 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
 
-    setTokenCookie(res, { id: user._id, role: user.role, name: user.name });
+    setTokenCookie(res, { id: user._id, role: user.role, name: user.name, email: user.email });
     return res.json({ 
       success: true, 
       message: 'Login successful!', 

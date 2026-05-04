@@ -60,21 +60,25 @@ router.get('/login', (req, res) => {
 });
 
 router.get('/register', (req, res) => {
-  if (checkUser(req)) return res.redirect('/');
-  res.render('register', { user: null, error: null });
+  res.redirect('/login');
 });
 
 router.get('/status', async (req, res) => {
   const user = checkUser(req);
   if (!user) return res.redirect('/login');
   
-  // Find admissions by userId OR by email (to catch those who applied before registering)
-  const admissions = await Admission.find({ 
-    $or: [
-      { userId: user.id },
-      { email: user.email.toLowerCase() }
-    ]
-  });
+  // Find admissions by email (primary) or userId (if valid ObjectId)
+  let query = { email: user.email.toLowerCase() };
+  if (user.id && user.id.length === 24) { // Basic check for ObjectId length
+    query = { 
+      $or: [
+        { userId: user.id },
+        { email: user.email.toLowerCase() }
+      ]
+    };
+  }
+
+  const admissions = await Admission.find(query);
 
   // Link unlinked admissions to this user
   for (let admission of admissions) {
