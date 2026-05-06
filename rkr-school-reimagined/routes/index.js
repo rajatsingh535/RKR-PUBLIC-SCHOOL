@@ -59,6 +59,16 @@ router.get('/login', (req, res) => {
   res.render('login', { user: null, error: null });
 });
 
+router.get('/forgot-password', (req, res) => {
+  if (checkUser(req)) return res.redirect('/');
+  res.render('forgot-password', { user: null, error: null, success: null });
+});
+
+router.get('/reset-password', (req, res) => {
+  if (checkUser(req)) return res.redirect('/');
+  res.render('reset-password', { user: null, token: req.query.token || '', error: null, success: null });
+});
+
 router.get('/register', (req, res) => {
   res.redirect('/login');
 });

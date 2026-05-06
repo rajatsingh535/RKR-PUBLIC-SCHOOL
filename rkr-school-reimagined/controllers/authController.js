@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { sendPasswordResetEmail } = require('../config/email');
 
 // ─── Fixed credentials (not in DB) ────────────────────────────────────────────
 const FIXED_ADMIN = {
@@ -103,10 +104,79 @@ const login = async (req, res) => {
   }
 };
 
-// ─── LOGOUT ────────────────────────────────────────────────────────────────────
+// ─── FORGOT PASSWORD (POST /api/auth/forgot-password) ─────────────────────────
+const forgotPassword = async (req, res) => {
+  try {
+    const email = String(req.body.email || '').toLowerCase().trim();
+    if (!email) {
+      return res.render('forgot-password', { user: null, error: 'Please enter your email address.', success: null });
+    }
+
+    const user = await User.findOne({ email });
+    if (user) {
+      const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${encodeURIComponent(token)}`;
+      await sendPasswordResetEmail(user.email, user.name || 'Student', resetUrl);
+    } else {
+      console.log(`Password reset requested for unknown email: ${email}`);
+    }
+
+    return res.render('forgot-password', {
+      user: null,
+      error: null,
+      success: 'If an account with that email exists, a password reset link has been sent. Please check your inbox.'
+    });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.render('forgot-password', { user: null, error: 'Unable to process the reset request. Please try again later.', success: null });
+  }
+};
+
+// ─── RESET PASSWORD (POST /api/auth/reset-password) ──────────────────────────
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token) {
+      return res.render('reset-password', { user: null, token: null, error: 'Reset token is missing. Please use the link from your email.', success: null });
+    }
+
+    if (!password || password.length < 6) {
+      return res.render('reset-password', { user: null, token, error: 'Password must be at least 6 characters long.', success: null });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render('reset-password', { user: null, token, error: 'Passwords do not match.', success: null });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      console.error('Reset token error:', err);
+      return res.render('reset-password', { user: null, token: null, error: 'Reset link is invalid or expired. Please request a new one.', success: null });
+    }
+
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      return res.render('reset-password', { user: null, token: null, error: 'No account found for this reset request.', success: null });
+    }
+
+    user.password = password;
+    await user.save();
+    setTokenCookie(res, { id: user._id, role: user.role, name: user.name, email: user.email });
+
+    return res.render('reset-password', { user: null, token: null, error: null, success: 'Your password has been reset successfully. You are now logged in.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.render('reset-password', { user: null, token: null, error: 'Unable to reset password at this time. Please try again later.', success: null });
+  }
+};
+
+// ─── LOGOUT ───────────────────────────────────────────────────────────────────
 const logout = (req, res) => {
   res.clearCookie('token');
   res.redirect('/');
 };
 
-module.exports = { register, login, logout };
+module.exports = { register, login, logout, forgotPassword, resetPassword };

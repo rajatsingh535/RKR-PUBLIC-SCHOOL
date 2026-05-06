@@ -191,4 +191,44 @@ const sendOTPEmail = async (userEmail, otp) => {
   }
 };
 
-module.exports = { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail };
+const sendPasswordResetEmail = async (userEmail, userName, resetUrl) => {
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') {
+    console.log(`⚠️ Email not configured. Password reset link for ${userEmail}: ${resetUrl}`);
+    return;
+  }
+
+  const mailOptions = {
+    from: `"RKR Public School" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: `Password Reset Request - RKR Public School`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+        <div style="background:#0a192f;color:white;padding:24px 32px;">
+          <h2 style="margin:0;">Password Reset Request</h2>
+        </div>
+        <div style="padding:32px;">
+          <p>Dear ${userName},</p>
+          <p>We received a request to reset the password for your RKR Public School account.</p>
+          <p style="margin:24px 0;">
+            <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#059669;color:white;border-radius:6px;text-decoration:none;">Reset Password</a>
+          </p>
+          <p>If the button does not work, paste this link into your browser:</p>
+          <p style="word-break:break-all;color:#334155;">${resetUrl}</p>
+          <p>If you did not request a password reset, you can safely ignore this email.</p>
+          <br>
+          <p>Regards,<br><strong>RKR Public School Support</strong></p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${userEmail}`);
+  } catch (err) {
+    console.error('❌ Password reset email error:', err.message);
+    throw new Error('Failed to send password reset email');
+  }
+};
+
+module.exports = { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail, sendPasswordResetEmail };
