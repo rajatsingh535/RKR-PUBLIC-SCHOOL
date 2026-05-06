@@ -5,7 +5,7 @@
         display: flex; gap: 1rem; margin-top: 2rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; overflow-x: auto;
     }
     .dashboard-tab {
-        padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.3s;
+        padding: 0.5rem 1rem; cursor: pointer; font-weight: 500; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.3s;
     }
     .dashboard-tab.active {
         color: var(--primary); border-bottom-color: var(--primary);
@@ -44,13 +44,14 @@
         display: none;
     }
     .payment-header {
-        background: linear-gradient(135deg, var(--primary) 0%, #1e293b 100%);
-        color: white;
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        color: #92400e;
         padding: 2.5rem 2rem;
-        border-radius: 12px;
+        border-radius: 16px;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
+        border: 1px solid #fde68a;
     }
     .payment-header::after {
         content: '';
@@ -59,25 +60,31 @@
         right: -10%;
         width: 300px;
         height: 300px;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(251, 191, 36, 0.1);
         border-radius: 50%;
     }
     .amount-display {
-        font-size: 3.5rem;
-        font-weight: 800;
-        color: var(--accent-light);
-        margin: 1rem 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 4rem;
+        font-weight: 500;
+        color: #b45309;
+        margin: 0.5rem 0;
+        font-family: 'Outfit', 'Inter', sans-serif;
     }
     .stripe-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(255,255,255,0.1);
-        padding: 0.4rem 1rem;
+        background: rgba(251, 191, 36, 0.2);
+        color: #b45309;
+        padding: 0.5rem 1.2rem;
         border-radius: 50px;
-        font-size: 0.8rem;
-        backdrop-filter: blur(4px);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .payment-header h4 {
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: #92400e;
     }
 </style>
 
@@ -217,10 +224,10 @@
                                     </div>
                                 <% } else if (record.feesAmount > 0) { %>
                                     <div id="payment-trigger-container-<%= record._id %>" style="text-align: center;">
-                                        <button type="button" onclick="initiateStripePayment('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="width: 100%; max-width: 400px; padding: 1.2rem; font-size: 1.1rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                                        <button type="button" onclick="initiateStripePayment('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="width: 100%; max-width: 400px; padding: 1.2rem; font-size: 1.1rem; border-radius: 12px; font-weight: 500; box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.2); background: #d97706; color: white;">
                                             Proceed to Payment
                                         </button>
-                                        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; opacity: 0.5;">
+                                        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; opacity: 0.4;">
                                             <i class="fab fa-cc-visa fa-2x"></i>
                                             <i class="fab fa-cc-mastercard fa-2x"></i>
                                             <i class="fab fa-google-pay fa-2x"></i>
