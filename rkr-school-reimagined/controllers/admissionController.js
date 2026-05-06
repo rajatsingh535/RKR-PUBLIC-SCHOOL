@@ -1,6 +1,7 @@
 const Admission = require('../models/Admission');
 const OTP = require('../models/OTP');
 const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail } = require('../config/email');
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? require('stripe')(process.env.STRIPE_SECRET_KEY) 
   : null;
