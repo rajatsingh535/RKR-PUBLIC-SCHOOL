@@ -1,8 +1,14 @@
 const Admission = require('../models/Admission');
 const OTP = require('../models/OTP');
 const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail } = require('../config/email');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY;
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY) 
+  : null;
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
+
+if (!stripe) {
+  console.warn('WARNING: STRIPE_SECRET_KEY is missing. Payment features will be disabled.');
+}
 
 
 const hasAdmissionAccess = (user, admission) => {
@@ -233,6 +239,9 @@ const uploadDocument = async (req, res) => {
 // ─── CREATE STRIPE PAYMENT INTENT (POST /api/admission/pay-fees/:id) — Student ──
 const payFees = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(500).json({ message: 'Stripe is not configured on the server. Please contact administration.' });
+    }
     if (req.user && req.user.role === 'admin') {
       return res.status(400).json({ message: 'Admin payments are disabled from this endpoint.' });
     }
@@ -290,6 +299,9 @@ const payFees = async (req, res) => {
 // ─── VERIFY STRIPE PAYMENT (POST /api/admission/verify-payment/:id) — Student ───
 const verifyStripePayment = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(500).json({ message: 'Stripe is not configured on the server.' });
+    }
     const { paymentIntentId } = req.body;
     if (!paymentIntentId) {
       return res.status(400).json({ message: 'Missing payment intent ID.' });
