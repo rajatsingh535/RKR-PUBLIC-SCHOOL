@@ -1,17 +1,9 @@
 const Admission = require('../models/Admission');
 const OTP = require('../models/OTP');
 const { sendAdminNotification, sendSubmissionReceivedEmail, sendStatusEmail, sendOTPEmail } = require('../config/email');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY;
 
-const normalizePhone = (value = '') => value.replace(/\D/g, '');
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
-const isRazorpayConfigured = () => Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
-const razorpay = isRazorpayConfigured()
-  ? new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET })
-  : null;
 
 const hasAdmissionAccess = (user, admission) => {
   if (!user || !admission) return false;
@@ -238,12 +230,9 @@ const uploadDocument = async (req, res) => {
   }
 };
 
-// ─── CREATE RAZORPAY ORDER (POST /api/admission/pay-fees/:id) — Student ───────
+// ─── CREATE STRIPE PAYMENT INTENT (POST /api/admission/pay-fees/:id) — Student ──
 const payFees = async (req, res) => {
   try {
-    if (!isRazorpayConfigured() || !razorpay) {
-      return res.status(500).json({ message: 'Razorpay is not configured on server.' });
-    }
     if (req.user && req.user.role === 'admin') {
       return res.status(400).json({ message: 'Admin payments are disabled from this endpoint.' });
     }
@@ -265,45 +254,45 @@ const payFees = async (req, res) => {
       return res.status(400).json({ message: 'Fees already paid.' });
     }
 
-    const amountPaise = Math.round(Number(admission.feesAmount) * 100);
-    const receipt = `RKRADM_${String(admission._id).slice(-8)}_${Date.now()}`.slice(0, 40);
-    const order = await razorpay.orders.create({
-      amount: amountPaise,
-      currency: 'INR',
-      receipt,
-      notes: {
+    const amountInCents = Math.round(Number(admission.feesAmount) * 100);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: 'inr',
+      metadata: {
         admissionId: String(admission._id),
         studentName: admission.studentName,
       },
+      description: `Admission Fees for ${admission.studentName}`,
+      shipping: {
+        name: admission.studentName,
+        address: {
+          line1: admission.address,
+        },
+      },
     });
 
-    admission.razorpayOrderId = order.id;
-    admission.feesVerificationPending = false;
-    admission.studentPaymentReference = '';
-    admission.feesSubmittedAt = null;
+    admission.stripePaymentIntentId = paymentIntent.id;
     await admission.save();
 
     res.json({
-      message: 'Razorpay order created.',
-      keyId: RAZORPAY_KEY_ID,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      studentName: admission.studentName,
-      email: admission.email,
-      phone: admission.phone,
+      message: 'Payment intent created.',
+      clientSecret: paymentIntent.client_secret,
+      publishableKey: STRIPE_PUBLISHABLE_KEY,
+      amount: admission.feesAmount,
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error: ' + err.message });
+    console.error('Stripe error:', err);
+    res.status(500).json({ message: 'Stripe error: ' + err.message });
   }
 };
 
-// ─── VERIFY RAZORPAY PAYMENT (POST /api/admission/verify-payment/:id) — Student ─
-const verifyRazorpayPayment = async (req, res) => {
+// ─── VERIFY STRIPE PAYMENT (POST /api/admission/verify-payment/:id) — Student ───
+const verifyStripePayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ message: 'Missing Razorpay verification details.' });
+    const { paymentIntentId } = req.body;
+    if (!paymentIntentId) {
+      return res.status(400).json({ message: 'Missing payment intent ID.' });
     }
 
     const admission = await Admission.findById(req.params.id);
@@ -312,26 +301,21 @@ const verifyRazorpayPayment = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized access to this application' });
     }
     if (admission.feesPaid) {
-      return res.status(400).json({ message: 'Fees already paid.' });
-    }
-    if (admission.razorpayOrderId && admission.razorpayOrderId !== razorpay_order_id) {
-      return res.status(400).json({ message: 'Invalid payment order for this application.' });
+      return res.status(200).json({ message: 'Fees already paid.', admission });
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-    if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ message: 'Payment signature verification failed.' });
+    // Retrieve the payment intent from Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ message: 'Payment has not been completed successfully. Status: ' + paymentIntent.status });
     }
 
     admission.feesPaid = true;
     admission.feesPaidAt = new Date();
-    admission.transactionId = razorpay_payment_id;
-    admission.razorpayPaymentId = razorpay_payment_id;
-    admission.razorpayOrderId = razorpay_order_id;
-    admission.paymentGateway = 'razorpay';
+    admission.transactionId = paymentIntent.id;
+    admission.stripePaymentIntentId = paymentIntent.id;
+    admission.paymentGateway = 'stripe';
     admission.receiptNumber = admission.receiptNumber || genReceiptNo();
     admission.feesVerificationPending = false;
     admission.studentPaymentReference = '';
@@ -340,6 +324,7 @@ const verifyRazorpayPayment = async (req, res) => {
 
     res.json({ message: 'Payment verified successfully. Receipt generated.', admission });
   } catch (err) {
+    console.error('Verify error:', err);
     res.status(500).json({ message: 'Server error: ' + err.message });
   }
 };
@@ -436,7 +421,7 @@ module.exports = {
   deleteForm,
   uploadDocument,
   payFees,
-  verifyRazorpayPayment,
+  verifyStripePayment,
   verifyFeesPayment,
   rejectFeeSubmission,
   updateFeesAmount,

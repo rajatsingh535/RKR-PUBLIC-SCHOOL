@@ -32,6 +32,53 @@
         border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Stripe UI Improvements */
+    #payment-element-container {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        text-align: left;
+        display: none;
+    }
+    .payment-header {
+        background: linear-gradient(135deg, var(--primary) 0%, #1e293b 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .payment-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+    .amount-display {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--accent-light);
+        margin: 1rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .stripe-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.1);
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        backdrop-filter: blur(4px);
+    }
 </style>
 
 <div style="background: var(--primary); padding: 4rem 0;">
@@ -130,33 +177,77 @@
                     <!-- TAB: Fees -->
                     <div id="tab-fees-<%= index %>" class="tab-content">
                         <% if (record.status !== 'Approved') { %>
-                            <div style="text-align: center; padding: 2rem;">
-                                <i class="fas fa-lock" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
-                                <p style="color: var(--text-muted);">Fee payment will be unlocked once your application is Approved.</p>
+                            <div style="text-align: center; padding: 4rem 2rem;">
+                                <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                                    <i class="fas fa-lock" style="font-size: 2rem; color: #94a3b8;"></i>
+                                </div>
+                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Payment Locked</h4>
+                                <p style="color: var(--text-muted); max-width: 300px; margin: 0 auto;">Fee payment will be unlocked once your application is officially Approved by the school.</p>
                             </div>
                         <% } else { %>
-                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; text-align: center;">
-                                <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Admission Fees — Razorpay</h4>
-                                <h2 style="font-size: 2.5rem; color: var(--accent); margin-bottom: 0.5rem;">₹<%= record.feesAmount || 0 %></h2>
-                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">Pay securely using Razorpay. Receipt is generated automatically after successful payment verification.</p>
+                            <div class="payment-card">
+                                <div class="payment-header">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h4 style="margin: 0; font-weight: 600; opacity: 0.9;">ADMISSION FEES</h4>
+                                        <div class="stripe-badge">
+                                            <i class="fab fa-stripe" style="font-size: 1.5rem;"></i>
+                                            <span>Secure Payment</span>
+                                        </div>
+                                    </div>
+                                    <h2 class="amount-display">₹<%= record.feesAmount || 0 %></h2>
+                                    <p style="opacity: 0.8; font-size: 0.95rem; margin-top: 0.5rem;">
+                                        <%= record.feesPaid ? 'Payment successfully completed' : 'Complete your admission process by paying the fees securely via Stripe.' %>
+                                    </p>
+                                </div>
 
                                 <% if (record.feesPaid) { %>
-                                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #d1fae5; color: #065f46; padding: 0.8rem 2rem; border-radius: 8px; font-weight: 700;">
-                                        <i class="fas fa-check-circle"></i> Payment verified
-                                    </div>
-                                    <% if (record.receiptNumber) { %>
-                                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">Receipt No: <strong style="color: var(--primary);"><%= record.receiptNumber %></strong></p>
-                                    <% } %>
-                                    <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-                                        <a href="/receipt/<%= record._id %>" target="_blank" rel="noopener" class="btn-yellow" style="display:inline-block;padding:0.75rem 1.5rem;text-decoration:none;">View / print receipt</a>
+                                    <div style="background: white; border-radius: 12px; padding: 2.5rem; text-align: center; border: 1px solid #e2e8f0;">
+                                        <div style="width: 60px; height: 60px; background: #d1fae5; color: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                                            <i class="fas fa-check" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        <h3 style="color: #065f46; margin-bottom: 0.5rem;">Payment Verified</h3>
+                                        <% if (record.receiptNumber) { %>
+                                            <p style="color: var(--text-muted); margin-bottom: 2rem;">Receipt No: <strong style="color: var(--primary);"><%= record.receiptNumber %></strong></p>
+                                        <% } %>
+                                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                                            <a href="/receipt/<%= record._id %>" target="_blank" class="btn-yellow" style="padding: 0.8rem 2rem;">
+                                                <i class="fas fa-print" style="margin-right: 8px;"></i> View Receipt
+                                            </a>
+                                        </div>
                                     </div>
                                 <% } else if (record.feesAmount > 0) { %>
-                                    <div style="max-width: 420px; margin: 0 auto; text-align: center;">
-                                        <button type="button" onclick="payFees('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="width:100%;padding:0.75rem;">Pay with Razorpay</button>
-                                        <p style="margin-top:0.75rem;font-size:0.84rem;color:var(--text-muted);">Secure cards, UPI, netbanking and wallets are supported.</p>
+                                    <div id="payment-trigger-container-<%= record._id %>" style="text-align: center;">
+                                        <button type="button" onclick="initiateStripePayment('<%= record._id %>')" id="btnPay_<%= record._id %>" class="btn-yellow" style="width: 100%; max-width: 400px; padding: 1.2rem; font-size: 1.1rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                                            Proceed to Payment
+                                        </button>
+                                        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; opacity: 0.5;">
+                                            <i class="fab fa-cc-visa fa-2x"></i>
+                                            <i class="fab fa-cc-mastercard fa-2x"></i>
+                                            <i class="fab fa-google-pay fa-2x"></i>
+                                            <i class="fab fa-apple-pay fa-2x"></i>
+                                        </div>
+                                    </div>
+
+                                    <div id="payment-element-container-<%= record._id %>" style="display: none; max-width: 500px; margin: 0 auto;">
+                                        <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                            <h5 style="margin: 0;">Payment Details</h5>
+                                            <button onclick="cancelPayment('<%= record._id %>')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">Cancel</button>
+                                        </div>
+                                        <form id="payment-form-<%= record._id %>">
+                                            <div id="link-authentication-element-<%= record._id %>"></div>
+                                            <div id="payment-element-<%= record._id %>"></div>
+                                            <button id="submit-payment-<%= record._id %>" class="btn-yellow" style="width: 100%; margin-top: 1.5rem; padding: 1rem;">
+                                                <span id="button-text-<%= record._id %>">Pay Now</span>
+                                                <span id="payment-loader-<%= record._id %>" class="loader" style="display: none;"></span>
+                                            </button>
+                                            <div id="payment-message-<%= record._id %>" style="margin-top: 1rem; color: #dc2626; font-size: 0.9rem; display: none; text-align: center;"></div>
+                                        </form>
                                     </div>
                                 <% } else { %>
-                                    <p style="color: var(--text-muted);">Fee amount not yet set by administration. Contact the school office.</p>
+                                    <div style="background: white; border-radius: 12px; padding: 3rem 2rem; text-align: center; border: 1px dashed #cbd5e1;">
+                                        <i class="fas fa-hourglass-half" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1.5rem;"></i>
+                                        <p style="color: var(--text-muted); margin: 0;">Fee amount has not been assigned yet. Please check back later or contact the school office.</p>
+                                    </div>
                                 <% } %>
                             </div>
                         <% } %>
@@ -196,41 +287,31 @@
     </div>
 </div>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <script>
+    let stripe;
+    let elements;
+    let currentRecordId;
+
     function switchTab(element, tabId) {
-        // Find parent tabs container and content container
         const tabsContainer = element.parentElement;
         const cardContainer = tabsContainer.parentElement;
-        
-        // Remove active class from tabs
         tabsContainer.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
-        // Add active class to clicked tab
         element.classList.add('active');
-        
-        // Hide all contents in this card
         cardContainer.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        // Show target content
         document.getElementById(tabId).classList.add('active');
     }
 
-    // Handle File Upload (Base64 conversion)
     async function handleUpload(e, id) {
         e.preventDefault();
         const btn = document.getElementById(`btnUpload_${id}`);
         const nameInput = document.getElementById(`docName_${id}`);
         const fileInput = document.getElementById(`docFile_${id}`);
-        
         if (!fileInput.files || fileInput.files.length === 0) return alert('Please select a file');
-        
         const file = fileInput.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-            return alert('File size must be under 2MB.');
-        }
-
+        if (file.size > 2 * 1024 * 1024) return alert('File size must be under 2MB.');
         btn.innerHTML = '<span class="loader"></span> Uploading...';
         btn.disabled = true;
-
         const reader = new FileReader();
         reader.onloadend = async function() {
             const base64data = reader.result;
@@ -238,107 +319,139 @@
                 const res = await fetch(`/api/admission/upload/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: nameInput.value,
-                        fileType: file.type,
-                        data: base64data
-                    })
+                    body: JSON.stringify({ name: nameInput.value, fileType: file.type, data: base64data })
                 });
                 const result = await res.json();
-                if (res.ok) {
-                    alert('Document uploaded successfully!');
-                    window.location.reload();
-                } else {
-                    alert(result.message || 'Upload failed');
-                    btn.innerHTML = 'Upload';
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                alert('Error connecting to server.');
-                btn.innerHTML = 'Upload';
-                btn.disabled = false;
-            }
+                if (res.ok) { alert('Document uploaded successfully!'); window.location.reload(); }
+                else { alert(result.message || 'Upload failed'); btn.innerHTML = 'Upload'; btn.disabled = false; }
+            } catch (err) { alert('Error connecting to server.'); btn.innerHTML = 'Upload'; btn.disabled = false; }
         };
         reader.readAsDataURL(file);
     }
 
-    async function payFees(id) {
+    // --- STRIPE INTEGRATION ---
+
+    function cancelPayment(id) {
+        document.getElementById(`payment-trigger-container-${id}`).style.display = 'block';
+        document.getElementById(`payment-element-container-${id}`).style.display = 'none';
+    }
+
+    async function initiateStripePayment(id) {
+        currentRecordId = id;
         const btn = document.getElementById(`btnPay_${id}`);
-        if (!window.Razorpay) {
-            return alert('Razorpay failed to load. Please refresh and try again.');
-        }
-        btn.innerHTML = '<span class="loader"></span> Processing...';
+        const triggerContainer = document.getElementById(`payment-trigger-container-${id}`);
+        const elementContainer = document.getElementById(`payment-element-container-${id}`);
+        
+        btn.innerHTML = '<span class="loader"></span> Loading Stripe...';
         btn.disabled = true;
 
         try {
-            const orderRes = await fetch(`/api/admission/pay-fees/${id}`, {
+            const res = await fetch(`/api/admission/pay-fees/${id}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin'
+                headers: { 'Content-Type': 'application/json' }
             });
-            const orderData = await orderRes.json();
-            if (!orderRes.ok) {
-                alert(orderData.message || 'Unable to create payment order.');
-                btn.innerHTML = 'Pay with Razorpay';
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.message || 'Error creating payment intent');
+                btn.innerHTML = 'Proceed to Payment';
                 btn.disabled = false;
                 return;
             }
 
-            const options = {
-                key: orderData.keyId,
-                amount: orderData.amount,
-                currency: orderData.currency || 'INR',
-                name: 'RKR Public School',
-                description: `Admission Fees - ${orderData.studentName || 'Student'}`,
-                order_id: orderData.orderId,
-                prefill: {
-                    name: orderData.studentName || '',
-                    email: orderData.email || '',
-                    contact: orderData.phone || ''
+            stripe = Stripe(data.publishableKey);
+            
+            const appearance = {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#1e293b',
+                    colorBackground: '#ffffff',
+                    colorText: '#1e293b',
+                    colorDanger: '#df1b41',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    spacingUnit: '4px',
+                    borderRadius: '8px',
                 },
-                theme: { color: '#4f46e5' },
-                modal: {
-                    ondismiss: function () {
-                        btn.innerHTML = 'Pay with Razorpay';
-                        btn.disabled = false;
-                    }
-                },
-                handler: async function (response) {
-                    try {
-                        const verifyRes = await fetch(`/api/admission/verify-payment/${id}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'same-origin',
-                            body: JSON.stringify(response)
-                        });
-                        const verifyData = await verifyRes.json();
-                        if (verifyRes.ok) {
-                            alert(verifyData.message || 'Payment successful.');
-                            window.location.reload();
-                        } else {
-                            alert(verifyData.message || 'Payment verification failed.');
-                            btn.innerHTML = 'Pay with Razorpay';
-                            btn.disabled = false;
-                        }
-                    } catch (e) {
-                        alert('Could not verify payment. Please contact admin with your payment ID.');
-                        btn.innerHTML = 'Pay with Razorpay';
-                        btn.disabled = false;
-                    }
-                }
             };
 
-            const rzp = new Razorpay(options);
-            rzp.on('payment.failed', function (resp) {
-                alert((resp.error && resp.error.description) || 'Payment failed. Please try again.');
-                btn.innerHTML = 'Pay with Razorpay';
-                btn.disabled = false;
-            });
-            rzp.open();
-        } catch (err) {
-            alert('Error connecting to server.');
-            btn.innerHTML = 'Pay with Razorpay';
+            elements = stripe.elements({ appearance, clientSecret: data.clientSecret });
+
+            const paymentElementOptions = { layout: "tabs" };
+            const paymentElement = elements.create("payment", paymentElementOptions);
+            paymentElement.mount(`#payment-element-${id}`);
+
+            triggerContainer.style.display = 'none';
+            elementContainer.style.display = 'block';
+
+            const form = document.getElementById(`payment-form-${id}`);
+            form.addEventListener('submit', (e) => handleSubmit(e, id));
+
+            btn.innerHTML = 'Proceed to Payment';
             btn.disabled = false;
+
+        } catch (err) {
+            console.error(err);
+            alert('Could not connect to payment gateway.');
+            btn.innerHTML = 'Proceed to Payment';
+            btn.disabled = false;
+        }
+    }
+
+    async function handleSubmit(e, id) {
+        e.preventDefault();
+        const submitBtn = document.getElementById(`submit-payment-${id}`);
+        const btnText = document.getElementById(`button-text-${id}`);
+        const loader = document.getElementById(`payment-loader-${id}`);
+        const messageDiv = document.getElementById(`payment-message-${id}`);
+
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        loader.style.display = 'inline-block';
+        messageDiv.style.display = 'none';
+
+        const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            redirect: 'if_required',
+            confirmParams: {
+                // Return URL for fallback if redirect happens
+                return_url: window.location.origin + "/status",
+            },
+        });
+
+        if (error) {
+            if (error.type === "card_error" || error.type === "validation_error") {
+                messageDiv.textContent = error.message;
+            } else {
+                messageDiv.textContent = "An unexpected error occurred.";
+            }
+            messageDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline-block';
+            loader.style.display = 'none';
+        } else if (paymentIntent && paymentIntent.status === "succeeded") {
+            // Payment successful, verify on server
+            verifyOnServer(id, paymentIntent.id);
+        }
+    }
+
+    async function verifyOnServer(id, paymentIntentId) {
+        try {
+            const res = await fetch(`/api/admission/verify-payment/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentIntentId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Payment successful! Your receipt has been generated.');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Verification failed. Please contact support.');
+                window.location.reload();
+            }
+        } catch (err) {
+            alert('Payment confirmed but verification failed. Please refresh or contact support.');
+            window.location.reload();
         }
     }
 </script>
